@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "990106325162",
+    "project_id": "catering-web-de9b7",
+    "storage_bucket": "catering-web-de9b7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990106325162:android:25e47e1925340eb0de80d3",
+        "android_client_info": {
+          "package_name": "com.example.cateringweb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2MWADDocrfLMHiaaTMLJNn0LPmcefMZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

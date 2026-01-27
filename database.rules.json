@@ -1,0 +1,35 @@
+{
+  "rules": {
+    "quote_requests": {
+      ".read": "auth != null",
+      ".write": true
+    },
+    "contact_messages": {
+      ".read": "auth != null",
+      ".write": true
+    },
+    "events": {
+      ".read": true,
+      ".write": true
+    },
+    "menu": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "live_stations": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "menu_items": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "orders": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": [
+        "status"
+      ]
+    }
+  }
+}

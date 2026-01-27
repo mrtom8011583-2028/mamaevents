@@ -1,0 +1,20 @@
+# robots.txt for MAMA EVENTS
+# https://mamaevents.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+
+# Sitemaps
+Sitemap: https://mamaevents.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 10
+
+# Block bad bots
+User-agent: AhrefsBot
+Crawl-delay: 30
+
+User-agent: SemrushBot
+Crawl-delay: 30

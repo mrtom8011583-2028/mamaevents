@@ -1,0 +1,997 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../providers/app_config_provider.dart';
+import '../../../features/contact/widgets/simplified_quote_dialog.dart';
+import '../../../config/theme/colors.dart';
+
+/// Professional Custom App Bar with Quick Links
+/// Two-tier header: Top contact bar + Main navigation
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String? title;
+  final bool showActions;
+  
+  const CustomAppBar({
+    super.key,
+    this.title,
+    this.showActions = true,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(120); // Increased for two tiers
+
+  @override
+  Widget build(BuildContext context) {
+    final configProvider = context.watch<AppConfigProvider>();
+    final config = configProvider.config;
+
+    return Container(
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // TOP BAR - Contact Info & Region
+          Container(
+            height: 40,
+            color: AppColors.logoDeepBlack, // Premium matte black
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                // Email (only on very large screens)
+                if (MediaQuery.of(context).size.width > 1200)
+                  _buildTopBarItem(
+                    Icons.email,
+                    config.email,
+                    () async {
+                      final uri = Uri.parse('mailto:${config.email}');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      }
+                    },
+                  ),
+                
+                if (MediaQuery.of(context).size.width > 1200)
+                  const SizedBox(width: 16),
+                
+                // Phone (hide on very small screens)
+                if (MediaQuery.of(context).size.width > 600)
+                  _buildTopBarItem(
+                    Icons.phone,
+                    config.phoneNumber,
+                    () async {
+                      final uri = Uri.parse('tel:${config.phoneNumber}');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri);
+                      }
+                    },
+                  ),
+                
+                const Spacer(),
+                
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
+          
+          // MAIN NAVIGATION BAR
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  // Logo/Brand
+                  Flexible(
+                    flex: 0,
+                    child: GestureDetector(
+                      onTap: () => context.go('/'),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Logo Image
+                            Container(
+                              constraints: const BoxConstraints(
+                                maxHeight: 65,
+                                maxWidth: 200,
+                              ),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                height: 65,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 50,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF000000),
+                                          borderRadius: BorderRadius.zero,
+                                        ),
+                                        child: const Icon(
+                                          Icons.restaurant_menu,
+                                          color: Colors.white,
+                                          size: 28,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'MAMA EVENTS',
+                                        style: GoogleFonts.inter(
+                                          color: const Color(0xFF000000),
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  // Spacer to push navigation to center
+                  const Spacer(),
+                  
+                  // Quick Links Navigation (Desktop) - Centered
+                  if (MediaQuery.of(context).size.width > 900)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildNavLink(context, 'Home', '/'),
+                        _buildNavLink(context, 'About', '/about'),
+                        _buildNavLink(context, 'Services', '/services'),
+                        _buildNavLink(context, 'Menu', '/menu'),
+                        _buildNavLink(context, 'Gallery', '/gallery'),
+                        _buildNavLink(context, 'Contact', '/contact'),
+                      ],
+                    ),
+                  
+                  // Spacer to push action buttons to the right
+                  const Spacer(),
+                  
+                  // Get Quote Button (Premium Gold CTA)
+                  if (MediaQuery.of(context).size.width > 600)
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFC9B037), Color(0xFFAA9225)], // Gold gradient
+                        ),
+                        borderRadius: BorderRadius.zero,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF424242).withOpacity(0.35),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const SimplifiedQuoteDialog(),
+                          );
+                        },
+                        icon: const Icon(Icons.event_available, size: 18),
+                        label: Text(
+                          'GET QUOTE',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero,
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                  
+                  const SizedBox(width: 12),
+                  
+                  // WhatsApp Button (Compact)
+                  IconButton.filled(
+                    onPressed: () async {
+                      final whatsappUrl = Uri.parse(config.getWhatsAppLink(
+                        message: 'Hello! I would like to inquire about your event services.',
+                      ));
+                      if (await canLaunchUrl(whatsappUrl)) {
+                        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 20),
+                    tooltip: 'WhatsApp Us',
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFF25D366),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                  
+                  // Mobile Menu Button
+                  if (MediaQuery.of(context).size.width <= 900) 
+                    const SizedBox(width: 8),
+                  if (MediaQuery.of(context).size.width <= 900)
+                    IconButton(
+                      icon: const Icon(Icons.menu, size: 28),
+                      onPressed: () => _showMobileMenu(context),
+                      color: const Color(0xFF000000),
+                      tooltip: 'Menu',
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBarItem(IconData icon, String text, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 14),
+            const SizedBox(width: 6),
+            Text(
+              text,
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavLink(BuildContext context, String label, String path) {
+    return _NavLinkWithHover(label: label, path: path);
+  }
+
+  Widget _buildTopBarItem(IconData icon, String text, VoidCallback onTap) {
+  final String label;
+  final String path;
+  
+  const _NavLinkWithHover({
+    required this.label,
+    required this.path,
+  });
+  
+  @override
+  State<_NavLinkWithHover> createState() => _NavLinkWithHoverState();
+}
+
+class _NavLinkWithHoverState extends State<_NavLinkWithHover> with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _controller;
+  late Animation<double> _underlineAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _underlineAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    // Safely get current path
+    String currentPath = '/';
+    try {
+      currentPath = GoRouterState.of(context).uri.path;
+    } catch (e) {
+      currentPath = '/';
+    }
+    
+    final isActive = currentPath == widget.path;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: InkWell(
+        onTap: () => context.go(widget.path),
+        onHover: (hovering) {
+          setState(() {
+            _isHovered = hovering;
+            if (hovering && !isActive) {
+              _controller.forward();
+            } else if (!isActive) {
+              _controller.reverse();
+            }
+          });
+        },
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Text with smooth color and weight transition
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  style: GoogleFonts.inter(
+                    color: isActive 
+                        ? const Color(0xFF000000)
+                        : (_isHovered 
+                            ? const Color(0xFF212121)
+                            : const Color(0xFF616161)),
+                    fontSize: 15,
+                    fontWeight: isActive 
+                        ? FontWeight.w700
+                        : (_isHovered ? FontWeight.w600 : FontWeight.w600),
+                    letterSpacing: _isHovered || isActive ? 0.6 : 0.5,
+                  ),
+                  child: Text(widget.label),
+                ),
+                
+                const SizedBox(height: 6),
+                
+                // Elegant center-out underline animation
+                SizedBox(
+                  height: 3,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Active state - solid black line
+                      if (isActive)
+                        Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF000000),
+                            borderRadius: BorderRadius.circular(1.5),
+                          ),
+                        ),
+                      
+                      // Hover state - animated gold line (center-out)
+                      if (!isActive)
+                        AnimatedBuilder(
+                          animation: _underlineAnimation,
+                          builder: (context, child) {
+                            return FractionallySizedBox(
+                              widthFactor: _underlineAnimation.value,
+                              child: Container(
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFC9B037),
+                                      Color(0xFFAA9225),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(1.5),
+                                  boxShadow: _isHovered ? [
+                                    BoxShadow(
+                                      color: const Color(0xFFC9B037).withOpacity(0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ] : [],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium Navigation Link with Hover Animations
+class _NavLinkWithHover extends StatefulWidget {
+  final String label;
+  final String path;
+  
+  const _NavLinkWithHover({
+    required this.label,
+    required this.path,
+  });
+  
+  @override
+  State<_NavLinkWithHover> createState() => _NavLinkWithHoverState();
+}
+
+class _NavLinkWithHoverState extends State<_NavLinkWithHover> with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _controller;
+  late Animation<double> _underlineAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 250),
+      vsync: this,
+    );
+    _underlineAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    // Safely get current path
+    String currentPath = '/';
+    try {
+      currentPath = GoRouterState.of(context).uri.path;
+    } catch (e) {
+      currentPath = '/';
+    }
+    
+    final isActive = currentPath == widget.path;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: InkWell(
+        onTap: () => context.go(widget.path),
+        onHover: (hovering) {
+          setState(() {
+            _isHovered = hovering;
+            if (hovering && !isActive) {
+              _controller.forward();
+            } else if (!isActive) {
+              _controller.reverse();
+            }
+          });
+        },
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Text with smooth color and weight transition
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  style: GoogleFonts.inter(
+                    color: isActive 
+                        ? const Color(0xFF000000)
+                        : (_isHovered 
+                            ? const Color(0xFF212121)
+                            : const Color(0xFF616161)),
+                    fontSize: 15,
+                    fontWeight: isActive 
+                        ? FontWeight.w700
+                        : (_isHovered ? FontWeight.w600 : FontWeight.w600),
+                    letterSpacing: _isHovered || isActive ? 0.6 : 0.5,
+                  ),
+                  child: Text(widget.label),
+                ),
+                
+                const SizedBox(height: 6),
+                
+                // Elegant center-out underline animation
+                SizedBox(
+                  height: 3,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Active state - solid black line
+                      if (isActive)
+                        Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF000000),
+                            borderRadius: BorderRadius.circular(1.5),
+                          ),
+                        ),
+                      
+                      // Hover state - animated gold line (center-out)
+                      if (!isActive)
+                        AnimatedBuilder(
+                          animation: _underlineAnimation,
+                          builder: (context, child) {
+                            return FractionallySizedBox(
+                              widthFactor: _underlineAnimation.value,
+                              child: Container(
+                                height: 3,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFFC9B037),
+                                      Color(0xFFAA9225),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(1.5),
+                                  boxShadow: _isHovered ? [
+                                    BoxShadow(
+                                      color: const Color(0xFFC9B037).withOpacity(0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ] : [],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Extension to CustomAppBar class continues...
+extension CustomAppBarMethods on CustomAppBar {
+  Widget _buildTopBarItem(IconData icon, String text, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: Colors.white, size: 14),
+            const SizedBox(width: 6),
+            Text(
+              text,
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMobileMenu(BuildContext context) {
+    final config = context.read<AppConfigProvider>().config;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: SingleChildScrollView(
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 16),
+                  
+                  // Drag Handle
+                  Container(
+                    width: 50,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E0E0),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Header with Brand
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          const Color(0xFF000000),
+                          const Color(0xFF424242),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF000000).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Full Logo Image
+                        Container(
+                          constraints: const BoxConstraints(
+                            maxHeight: 60,
+                            maxWidth: 200,
+                          ),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            height: 60,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.restaurant_menu,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'MAMA EVENTS',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 28),
+                  
+                  // Quick Links Title
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF000000),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Quick Links',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF424242),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Navigation Items
+                  _buildPremiumMobileNavItem(context, Icons.home_rounded, 'Home', '/', const Color(0xFF000000)),
+                  _buildPremiumMobileNavItem(context, Icons.info_rounded, 'About Us', '/about', const Color(0xFF424242)),
+                  _buildPremiumMobileNavItem(context, Icons.room_service_rounded, 'Services', '/services', const Color(0xFF5A5A5A)),
+                  _buildPremiumMobileNavItem(context, Icons.restaurant_menu_rounded, 'Menu', '/menu', const Color(0xFF000000)),
+                  _buildPremiumMobileNavItem(context, Icons.photo_library_rounded, 'Gallery', '/gallery', const Color(0xFF424242)),
+                  _buildPremiumMobileNavItem(context, Icons.contact_mail_rounded, 'Contact', '/contact', const Color(0xFF5A5A5A)),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Contact Section
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        // Call Button
+                        Expanded(
+                          child: _buildQuickContactButton(
+                            icon: Icons.phone_rounded,
+                            label: 'Call Us',
+                            color: const Color(0xFF000000),
+                            onTap: () async {
+                              final uri = Uri.parse('tel:${config.phoneNumber}');
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri);
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // WhatsApp Button
+                        Expanded(
+                          child: _buildQuickContactButton(
+                            icon: Icons.chat_rounded,
+                            label: 'WhatsApp',
+                            color: const Color(0xFF25D366),
+                            onTap: () async {
+                              final whatsappUrl = Uri.parse(config.getWhatsAppLink(
+                                message: 'Hello! I would like to inquire about your event services.',
+                              ));
+                              if (await canLaunchUrl(whatsappUrl)) {
+                                await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildQuickContactButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPremiumMobileNavItem(BuildContext context, IconData icon, String label, String path, Color iconColor) {
+    // Get current path
+    String currentPath = '/';
+    try {
+      currentPath = GoRouterState.of(context).uri.path;
+    } catch (e) {
+      currentPath = '/';
+    }
+    final isActive = currentPath == path;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF000000).withOpacity(0.08) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                iconColor.withOpacity(0.15),
+                iconColor.withOpacity(0.25),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, color: iconColor, size: 24),
+        ),
+        title: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+            color: isActive ? const Color(0xFF000000) : const Color(0xFF424242),
+          ),
+        ),
+        trailing: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFF000000) : const Color(0xFFF0F0F0),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 14,
+            color: isActive ? Colors.white : const Color(0xFF9E9E9E),
+          ),
+        ),
+        onTap: () {
+          Navigator.pop(context);
+          context.go(path);
+        },
+      ),
+    );
+  }
+}
+
+/// Premium Custom App Bar with Luxury Styling
+/// Alternative version with black/gold luxury theme
+class PremiumAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String? title;
+  final bool showActions;
+  
+  const PremiumAppBar({
+    super.key,
+    this.title,
+    this.showActions = true,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    final configProvider = context.watch<AppConfigProvider>();
+    final config = configProvider.config;
+
+    return AppBar(
+      backgroundColor: const Color(0xFF0B0B0B), // Luxury Black
+      elevation: 0,
+      iconTheme: const IconThemeData(
+        color: Color(0xFFC6A869), // Luxury Gold
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 🚩 REGION FLAG
+          Text(
+            config.region.flag,
+            style: const TextStyle(fontSize: 24),
+          ),
+          const SizedBox(width: 12),
+          // Company Name
+          Text(
+            title ?? 'MAMA EVENTS',
+            style: GoogleFonts.inter(
+              color: const Color(0xFFC6A869), // Luxury Gold
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ],
+      ),
+      actions: showActions ? [
+        // WhatsApp Contact
+        InkWell(
+          onTap: () async {
+            final whatsappUrl = Uri.parse(config.getWhatsAppLink(
+              message: 'Hello! I would like to inquire about your catering services.',
+            ));
+            if (await canLaunchUrl(whatsappUrl)) {
+              await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.phone,
+                  color: Color(0xFF25D366),
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  config.whatsappNumber,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFFFAFAFA), // Soft White
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+      ] : null,
+    );
+  }
+}
