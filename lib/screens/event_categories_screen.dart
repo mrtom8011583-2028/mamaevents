@@ -91,10 +91,10 @@ class EventCategoriesScreen extends StatelessWidget {
 
                 return SliverGrid(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 400,
-                    mainAxisSpacing: 24,
-                    crossAxisSpacing: 24,
-                    childAspectRatio: 0.85,
+                    maxCrossAxisExtent: 320,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 0.7,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) => _buildCategoryCard(context, categories[index]),
@@ -182,33 +182,32 @@ class EventCategoriesScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(24),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        icon,
-                        style: const TextStyle(fontSize: 48),
-                      ),
+                        Text(
+                          icon,
+                          style: const TextStyle(fontSize: 36),
+                        ),
                       const SizedBox(height: 8),
-                      Text(
-                        category.name,
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        Text(
+                          category.name,
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 4),
-                      Text(
-                        category.description,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: Colors.white70,
-                        ),
+                        Text(
+                          category.description,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

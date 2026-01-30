@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 import '../../../config/theme/colors.dart';
 
 /// Premium Animated Hero Section
@@ -15,6 +16,10 @@ class AnimatedHeroSection extends StatefulWidget {
 
 class _AnimatedHeroSectionState extends State<AnimatedHeroSection>
     with TickerProviderStateMixin {
+  // Video Controller
+  late VideoPlayerController _videoController;
+  bool _isVideoInitialized = false;
+
   // Animation Controllers
   late AnimationController _backgroundController;
   late AnimationController _logoController;
@@ -35,8 +40,29 @@ class _AnimatedHeroSectionState extends State<AnimatedHeroSection>
   @override
   void initState() {
     super.initState();
+    _initializeVideo();
     _setupAnimations();
     _startAnimationSequence();
+  }
+
+  Future<void> _initializeVideo() async {
+    // Web requires asset path to be relative or full depending on deployment
+    // 'assets/videos/background.mp4' is standard for Flutter web if listed in 'assets' section of pubspec
+    // However, pubspec lists 'lib/assets/videos/', so we try that first.
+    _videoController = VideoPlayerController.asset('lib/assets/videos/background.mp4');
+
+    try {
+      await _videoController.initialize();
+      await _videoController.setLooping(true);
+      await _videoController.setVolume(0.0); // Mute is required for web autoplay
+      await _videoController.play();
+      setState(() {
+        _isVideoInitialized = true;
+      });
+    } catch (e) {
+      debugPrint('Error initializing video: $e');
+      // Fallback is handled by _isVideoInitialized being false
+    }
   }
 
   void _setupAnimations() {
@@ -126,6 +152,7 @@ class _AnimatedHeroSectionState extends State<AnimatedHeroSection>
 
   @override
   void dispose() {
+    _videoController.dispose();
     _backgroundController.dispose();
     _logoController.dispose();
     _taglineController.dispose();
@@ -152,7 +179,7 @@ class _AnimatedHeroSectionState extends State<AnimatedHeroSection>
             builder: (context, child) {
               return Stack(
                 children: [
-                  // Animated Background with Radial Gradient
+                  // Animated Background (Video or Gradient)
                   _buildAnimatedBackground(),
                   
                   // Subtle Gold Accent Line at Bottom
@@ -204,26 +231,56 @@ class _AnimatedHeroSectionState extends State<AnimatedHeroSection>
     return Opacity(
       opacity: _backgroundOpacity.value,
       child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.logoDeepBlack,
-        ),
-        child: Center(
-          child: Transform.scale(
-            scale: _gradientScale.value,
-            child: Container(
-              width: 800,
-              height: 800,
+        color: AppColors.logoDeepBlack,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // 1. Video Layer (if initialized)
+            if (_isVideoInitialized)
+              FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _videoController.value.size.width,
+                  height: _videoController.value.size.height,
+                  child: VideoPlayer(_videoController),
+                ),
+              )
+            else
+              // Fallback Gradient
+              Center(
+                child: Transform.scale(
+                  scale: _gradientScale.value,
+                  child: Container(
+                    width: 800,
+                    height: 800,
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.logoCharcoalGrey.withOpacity(0.4),
+                          AppColors.logoDeepBlack.withOpacity(0.0),
+                        ],
+                        radius: 0.8,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // 2. Overlay Layer (Darken video for text readability)
+            Container(
               decoration: BoxDecoration(
-                gradient: RadialGradient(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.logoCharcoalGrey.withOpacity(0.4),
-                    AppColors.logoDeepBlack.withOpacity(0.0),
+                    Colors.black.withOpacity(0.7),
+                    Colors.black.withOpacity(0.5),
+                    Colors.black.withOpacity(0.8), // Darker at bottom for gold line contrast
                   ],
-                  radius: 0.8,
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/activity_log_model.dart';
 
 /// Activity Log Service - Enterprise Audit Trail
@@ -14,6 +15,16 @@ class ActivityLogService {
     try {
       final newLogRef = _logsRef.push();
       final data = activity.toJson();
+      
+      // Automatic user attribution if missing
+      if (data['performedBy'] == null || data['performedBy'] == '' || data['performedBy'] == 'admin') {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          data['performedBy'] = user.uid;
+          data['performedByName'] = user.email ?? 'Unknown Admin';
+        }
+      }
+
       data['logId'] = newLogRef.key;
       data['timestamp'] = ServerValue.timestamp;
       await newLogRef.set(data);

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../config/theme/colors.dart';
-import '../../../features/contact/widgets/simplified_quote_dialog.dart';
+import '../../../widgets/advanced_quote_request_form.dart';
 import '../../../providers/app_config_provider.dart';
 
 class LuxuryCTASection extends StatelessWidget {
@@ -12,6 +12,8 @@ class LuxuryCTASection extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final List<CTAButtonType> buttonTypes;
+  final String? packageName;
+  final double? basePricePerHead;
 
   const LuxuryCTASection({
     super.key,
@@ -19,6 +21,8 @@ class LuxuryCTASection extends StatelessWidget {
     this.subtitle = 'Get a customized quote tailored to your specific needs and budget.',
     this.icon = Icons.event_available,
     this.buttonTypes = const [CTAButtonType.quote],
+    this.packageName,
+    this.basePricePerHead,
   });
 
   @override
@@ -87,7 +91,33 @@ class LuxuryCTASection extends StatelessWidget {
           onPressed: () {
             showDialog(
               context: context,
-              builder: (context) => const SimplifiedQuoteDialog(),
+              builder: (context) => Dialog(
+                backgroundColor: Colors.white,
+                insetPadding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width < 600 ? 16 : 40,
+                  vertical: 24
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: AdvancedQuoteRequestForm(
+                      packageName: packageName,
+                      basePricePerHead: basePricePerHead,
+                      onSuccess: () {
+                         Navigator.pop(context);
+                         ScaffoldMessenger.of(context).showSnackBar(
+                           const SnackBar(
+                             content: Text('Quote request submitted successfully!'),
+                             backgroundColor: Color(0xFF059669),
+                           ),
+                         );
+                      },
+                    ),
+                  ),
+                ),
+              ),
             );
           },
         );
@@ -123,7 +153,7 @@ class LuxuryCTASection extends StatelessWidget {
             final config = context.read<AppConfigProvider>().config;
             final whatsappUrl = Uri.parse(
               config.getWhatsAppLink(
-                message: 'Hi! I\'m interested in your services. Can you provide more details?',
+                message: 'Hi! I\'m interested in your services${packageName != null ? ' ($packageName)' : ''}. Can you provide more details?',
               ),
             );
             if (await canLaunchUrl(whatsappUrl)) {

@@ -17,8 +17,8 @@ class HighPerformanceScrollBehavior extends MaterialScrollBehavior {
       case TargetPlatform.android:
       case TargetPlatform.iOS:
       case TargetPlatform.fuchsia:
-        // Mobile: Enhanced bouncing physics for 120 FPS displays
-        return const MobileOptimizedScrollPhysics();
+        // Mobile: Use ClampingPhysics to prevent "jiggle"/bounce
+        return const ClampingScrollPhysics();
       
       case TargetPlatform.linux:
       case TargetPlatform.macOS:
@@ -59,27 +59,8 @@ class HighPerformanceScrollBehavior extends MaterialScrollBehavior {
     Widget child,
     ScrollableDetails details,
   ) {
-    // Smooth overscroll indicators optimized for high FPS
-    switch (getPlatform(context)) {
-      case TargetPlatform.iOS:
-      case TargetPlatform.macOS:
-        // iOS-style stretching overscroll (Impeller-optimized)
-        return StretchingOverscrollIndicator(
-          axisDirection: details.direction,
-          child: child,
-        );
-      
-      case TargetPlatform.android:
-      case TargetPlatform.fuchsia:
-      case TargetPlatform.linux:
-      case TargetPlatform.windows:
-        // Material-style glow overscroll (Impeller-optimized)
-        return GlowingOverscrollIndicator(
-          axisDirection: details.direction,
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-          child: child,
-        );
-    }
+    // Remove all overscroll glow/stretch effects for a clean, professional feel
+    return child;
   }
 
   @override

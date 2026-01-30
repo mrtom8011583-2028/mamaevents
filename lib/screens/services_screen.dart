@@ -9,7 +9,6 @@ import '../providers/app_config_provider.dart';
 import '../config/theme/colors.dart';
 import '../shared/widgets/app_bar/custom_app_bar.dart';
 import '../features/services/screens/service_detail_screen.dart';
-import '../features/contact/widgets/simplified_quote_dialog.dart';
 import '../shared/widgets/luxury/luxury_cta_section.dart';
 
 class ServicesScreen extends StatefulWidget {

@@ -9,9 +9,6 @@ plugins {
 }
 
 android {
-    defaultConfig {
-        minsdkVersion 21
-    }
     namespace = "com.example.cateringweb"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion

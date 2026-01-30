@@ -1,11 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/event_package.dart';
+import '../../admin/services/activity_log_service.dart';
+import '../../admin/models/activity_log_model.dart';
 
 /// Service to handle Event Packages (Big Boxes, Small Boxes, Treasure Chests)
 /// Uses Firebase Realtime Database
 class EventService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
+  final ActivityLogService _activityLogService = ActivityLogService();
 
   // Singleton pattern
   static final EventService _instance = EventService._internal();
@@ -77,12 +81,43 @@ class EventService {
   /// Create or Update a Big Box (Event Category)
   /// This saves the ENTIRE tree (Sub-categories and Packages included)
   Future<void> saveEventCategory(EventCategory category) async {
+    // Determine if it's an update or creation
+    final existing = await getEventCategory(category.id);
+    final action = existing == null ? ActivityAction.categoryCreated : ActivityAction.categoryUpdated;
+
     await _eventsRef.child(category.id).set(category.toJson());
+
+    // Log the action
+    final user = FirebaseAuth.instance.currentUser;
+    await _activityLogService.log(ActivityLog.create(
+      action: action,
+      performedBy: user?.uid ?? 'system',
+      performedByName: user?.email ?? 'System',
+      entityType: 'category',
+      entityId: category.id,
+      entityName: category.name,
+      changesBefore: existing?.toJson(),
+      changesAfter: category.toJson(),
+    ));
   }
 
   /// Delete a Big Box
   Future<void> deleteEventCategory(String id) async {
-    await _eventsRef.child(id).remove();
+    final category = await getEventCategory(id);
+    if (category != null) {
+      await _eventsRef.child(id).remove();
+      
+      // Log the action
+      final user = FirebaseAuth.instance.currentUser;
+      await _activityLogService.log(ActivityLog.create(
+        action: ActivityAction.categoryDeleted,
+        performedBy: user?.uid ?? 'system',
+        performedByName: user?.email ?? 'System',
+        entityType: 'category',
+        entityId: id,
+        entityName: category.name,
+      ));
+    }
   }
 
   /// Toggle Visibility (Show/Hide Switch)

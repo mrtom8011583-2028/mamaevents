@@ -124,11 +124,13 @@ class ServiceDetailScreen extends StatelessWidget {
                 const SizedBox(height: 80),
 
                 // CTA Section
-                const LuxuryCTASection(
+                LuxuryCTASection(
                   title: 'Ready to Experience Our Service?',
                   subtitle: 'Contact us today to receive a personalized proposal based on your requirements.',
                   icon: Icons.room_service_outlined,
-                  buttonTypes: [CTAButtonType.quote, CTAButtonType.whatsapp],
+                  buttonTypes: const [CTAButtonType.quote, CTAButtonType.whatsapp],
+                  packageName: service.title,
+                  basePricePerHead: service.pricing?[config.region.code]?['starting']?.toDouble(),
                 ),
               ],
             ),
@@ -209,12 +211,14 @@ class ServiceDetailScreen extends StatelessWidget {
                 size: 32,
               ),
               const SizedBox(width: 16),
-              Text(
-                'Why Choose This Service',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.logoDeepBlack,
+              Expanded(
+                child: Text(
+                  'Why Choose This Service',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.logoDeepBlack,
+                  ),
                 ),
               ),
             ],

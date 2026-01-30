@@ -3,9 +3,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/menu_item.dart';
 import '../models/add_on.dart';
+import '../../admin/services/activity_log_service.dart';
+import '../../admin/models/activity_log_model.dart';
 
 class DatabaseService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
+  final ActivityLogService _activityLog = ActivityLogService();
 
   // Singleton pattern
   static final DatabaseService _instance = DatabaseService._internal();
@@ -110,12 +113,46 @@ class DatabaseService {
 
   /// Create or Update a Menu Item
   Future<void> updateMenuItem(MenuItem item) async {
+    // Get existing for diff if possible
+    final snapshot = await _menuItemsRef.child(item.id).get();
+    Map<String, dynamic>? before;
+    if (snapshot.exists) {
+      before = Map<String, dynamic>.from(snapshot.value as Map);
+    }
+
     await _menuItemsRef.child(item.id).set(item.toJson());
+
+    // Log the change
+    await _activityLog.log(ActivityLog.create(
+      action: before == null ? ActivityAction.categoryCreated : ActivityAction.categoryUpdated, // We use category enums for now or generic
+      performedBy: '', // Auto-filled by service
+      performedByName: '',
+      entityType: 'menu_item',
+      entityId: item.id,
+      entityName: item.name,
+      changesBefore: before,
+      changesAfter: item.toJson(),
+      note: before == null ? 'Added to ${item.category}' : 'Updated in ${item.category}',
+    ));
   }
 
   /// Delete a Menu Item
   Future<void> deleteMenuItem(String id) async {
-    await _menuItemsRef.child(id).remove();
+    final snapshot = await _menuItemsRef.child(id).get();
+    if (snapshot.exists) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      await _menuItemsRef.child(id).remove();
+
+      await _activityLog.log(ActivityLog.create(
+        action: ActivityAction.categoryDeleted, 
+        performedBy: '',
+        performedByName: '',
+        entityType: 'menu_item',
+        entityId: id,
+        entityName: data['name'] ?? id,
+        note: 'Deleted from category ${data['category']}',
+      ));
+    }
   }
 
   Future<void> submitOrder(Map<String, dynamic> orderData) async {
@@ -129,7 +166,26 @@ class DatabaseService {
 
   /// Update Order Status
   Future<void> updateOrderStatus(String orderId, String status) async {
+    final snapshot = await _ordersRef.child(orderId).get();
+    Map<String, dynamic>? before;
+    if (snapshot.exists) {
+      before = Map<String, dynamic>.from(snapshot.value as Map);
+    }
+
     await _ordersRef.child(orderId).update({'status': status});
+
+    if (before != null) {
+      await _activityLog.log(ActivityLog.create(
+        action: ActivityAction.statusChanged,
+        performedBy: '',
+        performedByName: '',
+        entityType: 'order',
+        entityId: orderId,
+        entityName: before['customerName'] ?? orderId,
+        changesBefore: {'status': before['status']},
+        changesAfter: {'status': status},
+      ));
+    }
   }
 
   /// Seeding: Upload menu items (Admin use only)
@@ -267,10 +323,26 @@ class DatabaseService {
     );
 
     await _addOnsRef.child(id).set(newAddOn.toJson());
+
+    await _activityLog.log(ActivityLog.create(
+      action: ActivityAction.subCategoryCreated, // Mapping add-ons to subcategories for logging
+      performedBy: '',
+      performedByName: '',
+      entityType: 'addon',
+      entityId: id,
+      entityName: addon.name,
+      note: 'New add-on created',
+    ));
   }
 
   /// Update an existing add-on
   Future<void> updateAddOn(AddOn addon) async {
+    final snapshot = await _addOnsRef.child(addon.id).get();
+    Map<String, dynamic>? before;
+    if (snapshot.exists) {
+      before = Map<String, dynamic>.from(snapshot.value as Map);
+    }
+
     final now = DateTime.now().millisecondsSinceEpoch;
     
     final updatedAddOn = AddOn(
@@ -288,6 +360,17 @@ class DatabaseService {
     );
 
     await _addOnsRef.child(addon.id).set(updatedAddOn.toJson());
+
+    await _activityLog.log(ActivityLog.create(
+      action: ActivityAction.subCategoryUpdated,
+      performedBy: '',
+      performedByName: '',
+      entityType: 'addon',
+      entityId: addon.id,
+      entityName: addon.name,
+      changesBefore: before,
+      changesAfter: updatedAddOn.toJson(),
+    ));
   }
 
   /// Delete an add-on

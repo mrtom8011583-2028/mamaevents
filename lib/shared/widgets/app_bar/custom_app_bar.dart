@@ -5,7 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../providers/app_config_provider.dart';
-import '../../../features/contact/widgets/simplified_quote_dialog.dart';
+import '../../../widgets/advanced_quote_request_form.dart';
 import '../../../config/theme/colors.dart';
 import '../animations/hover_scale_animation.dart';
 
@@ -125,19 +125,33 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       alignment: Alignment.centerLeft,
                       child: InkWell(
                         onTap: () => context.go('/'),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          height: 50,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Text(
-                              'MAMA EVENTS',
-                              style: GoogleFonts.inter(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.logoDeepBlack,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0.5, end: 1.0),
+                          duration: const Duration(milliseconds: 1000),
+                          curve: Curves.elasticOut,
+                          builder: (context, value, child) {
+                            return Transform.scale(
+                              scale: value,
+                              child: Opacity(
+                                opacity: value.clamp(0.0, 1.0),
+                                child: child,
                               ),
                             );
                           },
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            height: 90,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Text(
+                                'MAMA EVENTS',
+                                style: GoogleFonts.inter(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.logoDeepBlack,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -169,10 +183,35 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                         if (isDesktop) ...[
                           HoverScaleAnimation(
                             child: ElevatedButton(
-                              onPressed: () {
+                              // Desktop Button
+                                onPressed: () {
                                 showDialog(
                                   context: context,
-                                  builder: (context) => const SimplifiedQuoteDialog(),
+                                  builder: (context) => Dialog(
+                                    backgroundColor: Colors.white,
+                                    insetPadding: EdgeInsets.symmetric(
+                                      horizontal: MediaQuery.of(context).size.width < 600 ? 16 : 40,
+                                      vertical: 24
+                                    ),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: AdvancedQuoteRequestForm(
+                                          onSuccess: () {
+                                             Navigator.pop(context);
+                                             ScaffoldMessenger.of(context).showSnackBar(
+                                               const SnackBar(
+                                                 content: Text('Quote request submitted successfully!'),
+                                                 backgroundColor: Color(0xFF059669),
+                                               ),
+                                             );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
@@ -243,11 +282,32 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                child: ElevatedButton(
                  onPressed: () {
                     Navigator.pop(context);
-                   showDialog(
-                     context: context,
-                     builder: (context) => const SimplifiedQuoteDialog(),
-                   );
-                 },
+                    showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        backgroundColor: Colors.white,
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: AdvancedQuoteRequestForm(
+                              onSuccess: () {
+                                 Navigator.pop(context);
+                                 ScaffoldMessenger.of(context).showSnackBar(
+                                   const SnackBar(
+                                     content: Text('Quote request submitted successfully!'),
+                                     backgroundColor: Color(0xFF059669),
+                                   ),
+                                 );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                  style: ElevatedButton.styleFrom(
                    backgroundColor: AppColors.logoDeepBlack,
                    foregroundColor: Colors.white,

@@ -7,7 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../data/office_locations_data.dart';
 import '../providers/app_config_provider.dart';
 import '../shared/widgets/app_bar/custom_app_bar.dart';
-import '../features/contact/widgets/simplified_quote_dialog.dart';
+import '../widgets/advanced_quote_request_form.dart';
 import '../config/theme/colors.dart';
 import '../shared/widgets/luxury/luxury_cta_section.dart';
 
@@ -173,7 +173,28 @@ class ContactScreenEnhanced extends StatelessWidget {
                   onTap: (BuildContext ctx) {
                     showDialog(
                       context: ctx,
-                      builder: (context) => const SimplifiedQuoteDialog(),
+                      builder: (context) => Dialog(
+                        backgroundColor: Colors.white,
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: AdvancedQuoteRequestForm(
+                              onSuccess: () {
+                                 Navigator.pop(context);
+                                 ScaffoldMessenger.of(context).showSnackBar(
+                                   const SnackBar(
+                                     content: Text('Quote request submitted successfully!'),
+                                     backgroundColor: Color(0xFF059669),
+                                   ),
+                                 );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
                     );
                   },
                 ),

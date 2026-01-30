@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:universal_html/html.dart' as html;
 import '../models/activity_log_model.dart';
 import '../services/activity_log_service.dart';
 
@@ -15,34 +17,62 @@ class ActivityLogScreen extends StatefulWidget {
 class _ActivityLogScreenState extends State<ActivityLogScreen> {
   final ActivityLogService _activityLogService = ActivityLogService();
   final _searchController = TextEditingController();
+  ActivityAction? _filterAction;
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1E3A8A),
-        title: Text(
-          'Activity Log',
-          style: GoogleFonts.inter(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: _exportLogs,
-            tooltip: 'Export CSV',
-          ),
-        ],
-      ),
       body: Column(
         children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+            child: Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Activity Log',
+                      style: GoogleFonts.outfit(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Track all administrative changes and actions',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  onPressed: _exportLogs,
+                  icon: const Icon(Icons.download_rounded, size: 18, color: Color(0xFFD4AF37)),
+                  label: const Text('Export CSV'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF1F2937),
+                    elevation: 0,
+                    side: BorderSide(color: Colors.grey.shade200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           // Search Bar
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -53,10 +83,55 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 ),
                 filled: true,
                 fillColor: const Color(0xFFF9FAFB),
+                isDense: true,
               ),
               onChanged: (value) => setState(() {}),
             ),
           ),
+          
+          // Action Filters
+          Container(
+            color: Colors.white,
+            height: 50,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              children: [
+                FilterChip(
+                  label: const Text('All'),
+                  selected: _filterAction == null,
+                  onSelected: (val) => setState(() => _filterAction = null),
+                  selectedColor: const Color(0xFFD4AF37),
+                  labelStyle: TextStyle(
+                    color: _filterAction == null ? Colors.black : Colors.grey[700],
+                    fontWeight: _filterAction == null ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ...[
+                  ActivityAction.categoryCreated,
+                  ActivityAction.subCategoryCreated,
+                  ActivityAction.packageCreated,
+                  ActivityAction.orderCreated,
+                  ActivityAction.quoteAccepted,
+                  ActivityAction.statusChanged,
+                ].map((action) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(action.label),
+                    selected: _filterAction == action,
+                    onSelected: (val) => setState(() => _filterAction = val ? action : null),
+                    selectedColor: const Color(0xFFD4AF37),
+                    labelStyle: TextStyle(
+                      color: _filterAction == action ? Colors.black : Colors.grey[700],
+                      fontWeight: _filterAction == action ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                )),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
           
           // Activity List
           Expanded(
@@ -81,6 +156,11 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                     a.description.toLowerCase().contains(search) ||
                     (a.note?.toLowerCase().contains(search) ?? false)
                   ).toList();
+                }
+
+                // Filter by action
+                if (_filterAction != null) {
+                  activities = activities.where((a) => a.action == _filterAction).toList();
                 }
                 
                 if (activities.isEmpty) {
@@ -225,18 +305,23 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     before.forEach((key, beforeValue) {
       final afterValue = after[key];
       if (beforeValue != afterValue) {
+        final bStr = _truncateBase64(beforeValue.toString());
+        final aStr = _truncateBase64(afterValue.toString());
+        
         chips.add(
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
-              borderRadius: BorderRadius.circular(4),
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.shade200),
             ),
             child: Text(
-              '$key: $beforeValue → $afterValue',
+              '$key: $bStr → $aStr',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: const Color(0xFF059669),
+                color: const Color(0xFF374151),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -245,6 +330,16 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     });
     
     return chips;
+  }
+
+  String _truncateBase64(String value) {
+    if (value.startsWith('data:image') || value.length > 100) {
+      if (value.contains('base64,')) {
+        return '[Image Data]';
+      }
+      return '${value.substring(0, 30)}...';
+    }
+    return value;
   }
 
   Widget _buildEmptyState() {
@@ -303,14 +398,24 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     switch (action) {
       case ActivityAction.orderCreated:
       case ActivityAction.quoteAccepted:
-        return const Color(0xFF059669);
+      case ActivityAction.categoryCreated:
+      case ActivityAction.subCategoryCreated:
+      case ActivityAction.packageCreated:
+        return const Color(0xFF059669); // Green
       case ActivityAction.paymentReceived:
-        return const Color(0xFF3B82F6);
+      case ActivityAction.fileUploaded:
+        return const Color(0xFF3B82F6); // Blue
       case ActivityAction.statusChanged:
-        return const Color(0xFFF59E0B);
+      case ActivityAction.categoryUpdated:
+      case ActivityAction.subCategoryUpdated:
+      case ActivityAction.packageUpdated:
+        return const Color(0xFFF59E0B); // Amber
       case ActivityAction.orderCancelled:
       case ActivityAction.quoteRejected:
-        return const Color(0xFFDC2626);
+      case ActivityAction.categoryDeleted:
+      case ActivityAction.subCategoryDeleted:
+      case ActivityAction.packageDeleted:
+        return const Color(0xFFDC2626); // Red
       default:
         return const Color(0xFF6B7280);
     }
@@ -329,8 +434,20 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     try {
       final csv = await _activityLogService.exportToCSV();
       
-      // TODO: Implement file download for web
       if (mounted) {
+        // Create blob and download link
+        final bytes = utf8.encode(csv);
+        final blob = html.Blob([bytes]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.document.createElement('a') as html.AnchorElement
+          ..href = url
+          ..style.display = 'none'
+          ..download = 'activity_log_${DateTime.now().toIso8601String()}.csv';
+        html.document.body!.children.add(anchor);
+        anchor.click();
+        html.document.body!.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Exported ${csv.split('\n').length - 1} activities'),

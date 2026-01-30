@@ -37,12 +37,12 @@ class _AdminImagePickerState extends State<AdminImagePicker> {
 
   Future<void> _pickAndProcessImage() async {
     try {
-      // CRITICAL: Smaller dimensions to avoid Firebase RTDB 10MB limit
+      // UPDATED: High Quality for Premium Experience
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 400,   // Reduced from 1000
-        maxHeight: 400,  // Reduced from 1000
-        imageQuality: 40, // Lower quality for smaller size
+        maxWidth: 1920,   // Full HD
+        maxHeight: 1920,  // Full HD
+        imageQuality: 95, // High quality
       );
       
       if (pickedFile != null) {
@@ -53,22 +53,23 @@ class _AdminImagePickerState extends State<AdminImagePicker> {
         // Read bytes directly
         Uint8List bytes = await pickedFile.readAsBytes();
         
-        // TARGET SIZE: Under 100KB for Firebase RTDB compatibility
-        if (bytes.lengthInBytes > 100 * 1024) {
+        // TARGET SIZE: Under 1.5MB (Increased from 100KB for quality)
+        // If extremely large, we lightly compress, but maintain HD resolution
+        if (bytes.lengthInBytes > 1500 * 1024) {
              try {
                 // Iterative compression
-                int quality = 60;
-                while (bytes.lengthInBytes > 100 * 1024 && quality > 10) {
+                int quality = 85;
+                while (bytes.lengthInBytes > 1500 * 1024 && quality > 50) {
                    final Uint8List? compressed = await FlutterImageCompress.compressWithList(
                       bytes,
-                      minHeight: 400,  // Reduced from 800
-                      minWidth: 400,   // Reduced from 800
+                      minHeight: 1080, // Maintain at least 1080p
+                      minWidth: 1080,  // Maintain at least 1080p
                       quality: quality,
                     );
                    if (compressed != null) {
                       bytes = compressed;
                    }
-                   quality -= 15;
+                   quality -= 10;
                 }
              } catch (e) {
                 // Fallback if compression fails (e.g. on web sometimes)

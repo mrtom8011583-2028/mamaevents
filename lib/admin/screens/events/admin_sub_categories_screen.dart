@@ -43,55 +43,65 @@ class _AdminSubCategoriesScreenState extends State<AdminSubCategoriesScreen> {
 
         return Scaffold(
           backgroundColor: const Color(0xFFF9FAFB),
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
-              onPressed: () => context.pop(),
-            ),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.name,
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF1F2937),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  'Manage Sub-Events (Small Boxes)',
-                  style: GoogleFonts.inter(
-                    color: const Color(0xFF6B7280),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
+          body: Column(
+            children: [
+              // Header
               Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: ElevatedButton.icon(
-                  onPressed: () => _showAddEditDialog(context, event),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Small Box'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6), // Blue
-                    foregroundColor: Colors.white,
-                  ),
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                      onPressed: () => context.pop(),
+                      tooltip: 'Back to Events',
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event.name,
+                          style: GoogleFonts.outfit(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1F2937),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Manage Sub-Events (Small Boxes)',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    ElevatedButton.icon(
+                      onPressed: () => _showAddEditDialog(context, event),
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('ADD SUB-EVENT'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD4AF37),
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-          body: subCategories.isEmpty
-              ? _buildEmptyState(context, event)
-              : GridView.builder(
+              const SizedBox(height: 16),
+              Expanded(
+                child: subCategories.isEmpty
+                    ? _buildEmptyState(context, event)
+                    : GridView.builder(
                   padding: const EdgeInsets.all(24),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 350,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: 1.0, // Consistent with events screen
                     crossAxisSpacing: 24,
                     mainAxisSpacing: 24,
                   ),
@@ -101,6 +111,9 @@ class _AdminSubCategoriesScreenState extends State<AdminSubCategoriesScreen> {
                     return _buildSubCategoryCard(context, event, subCategory);
                   },
                 ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -141,7 +154,7 @@ class _AdminSubCategoriesScreenState extends State<AdminSubCategoriesScreen> {
           children: [
             // Image Area
             Expanded(
-              flex: 3,
+              flex: 5,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -153,25 +166,25 @@ class _AdminSubCategoriesScreenState extends State<AdminSubCategoriesScreen> {
                   else
                     Container(
                       color: Colors.blue[50],
-                      child: Center(child: Text(subCategory.icon, style: const TextStyle(fontSize: 40))),
+                      child: Center(child: Text(subCategory.icon, style: const TextStyle(fontSize: 32))),
                     ),
                     
                   // Order Badge
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: 8,
+                    left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2)),
+                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2, offset: const Offset(0, 1)),
                         ],
                       ),
                       child: Text(
                         '#${subCategory.order}',
-                        style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -181,13 +194,14 @@ class _AdminSubCategoriesScreenState extends State<AdminSubCategoriesScreen> {
             
             // Content Area
             Expanded(
-              flex: 2,
+              flex: 4,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
@@ -201,38 +215,60 @@ class _AdminSubCategoriesScreenState extends State<AdminSubCategoriesScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        PopupMenuButton<String>(
-                           icon: const Icon(Icons.more_vert, size: 18),
-                           onSelected: (value) {
-                             if (value == 'edit') {
-                               _showAddEditDialog(context, event, subCategory: subCategory);
-                             } else if (value == 'delete') {
-                               _confirmDelete(context, event, subCategory);
-                             }
-                           },
-                           itemBuilder: (context) => [
-                             const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                             const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
-                           ],
+                        Material(
+                          color: Colors.transparent,
+                          child: PopupMenuButton<String>(
+                             padding: EdgeInsets.zero,
+                             constraints: const BoxConstraints(minWidth: 120),
+                             icon: const Icon(Icons.more_vert, size: 18, color: Color(0xFF6B7280)),
+                             onSelected: (value) {
+                               if (value == 'edit') {
+                                 _showAddEditDialog(context, event, subCategory: subCategory);
+                               } else if (value == 'delete') {
+                                 _confirmDelete(context, event, subCategory);
+                               }
+                             },
+                             itemBuilder: (context) => [
+                               const PopupMenuItem(
+                                 value: 'edit',
+                                 child: Row(children: [Icon(Icons.edit, size: 16), SizedBox(width: 8), Text('Edit', style: TextStyle(fontSize: 13))]),
+                               ),
+                               const PopupMenuItem(
+                                 value: 'delete',
+                                 child: Row(children: [Icon(Icons.delete, color: Colors.red, size: 16), SizedBox(width: 8), Text('Delete', style: TextStyle(color: Colors.red, fontSize: 13))]),
+                               ),
+                             ],
+                          ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       subCategory.description,
-                      style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280)),
+                      style: GoogleFonts.inter(
+                        fontSize: 11, 
+                        color: const Color(0xFF6B7280),
+                        height: 1.2,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const Spacer(),
-                    Row(
-                      children: [
-                        const Icon(Icons.inventory_2, size: 14, color: Color(0xFF9CA3AF)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${subCategory.packages.length} Packages',
-                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.only(top: 8),
+                      decoration: BoxDecoration(
+                        border: Border(top: BorderSide(color: Colors.grey[100]!)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.inventory_2_outlined, size: 14, color: Colors.blue[400]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${subCategory.packages.length} Packages',
+                            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: const Color(0xFF4B5563)),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

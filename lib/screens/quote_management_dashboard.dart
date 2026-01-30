@@ -63,7 +63,7 @@ class _QuoteManagementDashboardState extends State<QuoteManagementDashboard> wit
       children: [
          // Tab Bar Header
          Container(
-           color: const Color(0xFF212121),
+           color: Colors.black,
            width: double.infinity,
            child: TabBar(
               controller: _tabController,
@@ -501,7 +501,7 @@ class _QuoteManagementDashboardState extends State<QuoteManagementDashboard> wit
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF212121),
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -574,7 +574,7 @@ class _QuoteManagementDashboardState extends State<QuoteManagementDashboard> wit
                         'Price: ${menuItem['price']}',
                         style: GoogleFonts.inter(
                           fontSize: 14,
-                          color: const Color(0xFF212121),
+                          color: Colors.black,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -588,7 +588,7 @@ class _QuoteManagementDashboardState extends State<QuoteManagementDashboard> wit
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF212121),
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -731,7 +731,7 @@ class _QuoteManagementDashboardState extends State<QuoteManagementDashboard> wit
             value,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: const Color(0xFF212121),
+              color: Colors.black,
             ),
           ),
         ),

@@ -214,7 +214,7 @@ class _CreateOrderDialogState extends State<CreateOrderDialog> {
                 child: ListTile(
                   leading: const Icon(Icons.format_quote, color: Color(0xFF1E3A8A)),
                   title: Text(data['quoteId'] ?? 'Unknown'),
-                  subtitle: Text('${data['name']} • ${data['guestCount']} guests\n${data['eventLocation'] ?? data['location'] ?? 'No Location'}'),
+                  subtitle: Text('${data['name'] ?? 'Unknown Customer'} • ${data['guestCount'] ?? '?'} guests\n${data['eventLocation'] ?? data['location'] ?? 'No Location'}'),
                   isThreeLine: true,
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () => _loadQuote(data['quoteId']),
@@ -252,10 +252,10 @@ class _CreateOrderDialogState extends State<CreateOrderDialog> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildDetailRow('Quote ID', _selectedQuote!['quoteId']),
-          _buildDetailRow('Customer', _selectedQuote!['name']),
-          _buildDetailRow('Email', _selectedQuote!['email']),
-          _buildDetailRow('Phone', _selectedQuote!['phone']),
+          _buildDetailRow('Quote ID', _selectedQuote!['quoteId'] ?? 'Unknown ID'),
+          _buildDetailRow('Customer', _selectedQuote!['name'] ?? 'Unknown Customer'),
+          _buildDetailRow('Email', _selectedQuote!['email'] ?? 'N/A'),
+          _buildDetailRow('Phone', _selectedQuote!['phone'] ?? 'N/A'),
           _buildDetailRow('Guests', '${_selectedQuote!['guestCount'] ?? 0}'),
           _buildDetailRow('Region', _selectedQuote!['region'] ?? 'N/A'),
         ],
@@ -350,13 +350,17 @@ class _CreateOrderDialogState extends State<CreateOrderDialog> {
       
       // Get event date from quote or use future date
       DateTime eventDate;
-      if (_selectedQuote!['eventDate'] != null) {
-        eventDate = (_selectedQuote!['eventDate'] as Timestamp).toDate();
-      } else if (_selectedQuote!['serviceDate'] != null) {
-        eventDate = (_selectedQuote!['serviceDate'] as Timestamp).toDate();
-      } else {
-        eventDate = DateTime.now().add(const Duration(days: 30));
+      
+      DateTime? parseDate(dynamic date) {
+        if (date == null) return null;
+        if (date is int) return DateTime.fromMillisecondsSinceEpoch(date);
+        if (date is Timestamp) return date.toDate();
+        return null;
       }
+
+      eventDate = parseDate(_selectedQuote!['eventDate']) ?? 
+                  parseDate(_selectedQuote!['serviceDate']) ?? 
+                  DateTime.now().add(const Duration(days: 30));
       
       await _orderService.createOrder(
         quoteId: _selectedQuoteId!,

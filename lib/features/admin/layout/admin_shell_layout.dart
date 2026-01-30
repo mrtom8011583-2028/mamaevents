@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../admin/widgets/notification_bell.dart';
+import '../../../../config/theme/colors.dart';
 
 class AdminShellLayout extends StatelessWidget {
   final Widget child;
@@ -13,22 +14,16 @@ class AdminShellLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF212121),
+        backgroundColor: Colors.black,
         elevation: 0,
-        title: Row(
-          children: [
-            const Icon(Icons.dashboard, color: Colors.white),
-            const SizedBox(width: 12),
-            Text(
-              'MAMA EVENTS - Admin',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
+        title: Text(
+          'MAMA EVENTS',
+          style: GoogleFonts.outfit(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
         ),
         actions: [
           Padding(
@@ -61,7 +56,35 @@ class AdminShellLayout extends StatelessWidget {
         children: [
           // Persistent Sidebar
           NavigationRail(
-            backgroundColor: const Color(0xFF2C2C2C),
+            backgroundColor: Colors.black,
+            extended: MediaQuery.of(context).size.width > 1200,
+            leading: Column(
+              children: [
+                const SizedBox(height: 16),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.premiumGoldGradient,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFD4AF37).withOpacity(0.3),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset(
+                      'assets/images/logo_icon.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
             selectedIndex: _calculateSelectedIndex(context),
             onDestinationSelected: (int index) {
               switch (index) {
@@ -80,12 +103,17 @@ class AdminShellLayout extends StatelessWidget {
                 case 4:
                   context.go('/admin/quotes');
                   break;
-                case 5: 
+                case 5:
+                  context.go('/admin/activity');
+                  break;
+                case 6: 
                    context.go('/'); // View Website
                    break;
               }
             },
-            labelType: NavigationRailLabelType.all,
+            labelType: MediaQuery.of(context).size.width > 1200 
+                ? NavigationRailLabelType.none 
+                : NavigationRailLabelType.all,
             selectedLabelTextStyle: GoogleFonts.inter(
               color: const Color(0xFFD4AF37), 
               fontWeight: FontWeight.bold
@@ -123,6 +151,11 @@ class AdminShellLayout extends StatelessWidget {
                 selectedIcon: Icon(Icons.format_quote),
                 label: Text('Quotes'),
               ),
+              NavigationRailDestination(
+                icon: Icon(Icons.history_outlined),
+                selectedIcon: Icon(Icons.history_rounded),
+                label: Text('Activity'),
+              ),
                NavigationRailDestination(
                 icon: Icon(Icons.public),
                 selectedIcon: Icon(Icons.public),
@@ -142,6 +175,7 @@ class AdminShellLayout extends StatelessWidget {
     if (location.startsWith('/admin/menu')) return 2;
     if (location.startsWith('/admin/events')) return 3;
     if (location.startsWith('/admin/quotes')) return 4;
+    if (location.startsWith('/admin/activity')) return 5;
     if (location == '/admin') return 0;
     return 0;
   }

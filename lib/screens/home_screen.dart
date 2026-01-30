@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -617,13 +618,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildPrimaryButton(
                   label: 'WhatsApp Us Now',
                   icon: FontAwesomeIcons.whatsapp,
-                  onPressed: () {},
+                  onPressed: () async {
+                    final url = Uri.parse(config.region.getWhatsAppLink());
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                  },
                 ),
                 // Email Button
                 _buildSecondaryButton(
                   label: 'Email Us',
                   icon: Icons.email_outlined,
-                  onPressed: () {},
+                  onPressed: () async {
+                     final Uri emailLaunchUri = Uri(
+                      scheme: 'mailto',
+                      path: config.email,
+                      query: 'subject=Inquiry from Website',
+                    );
+                    if (await canLaunchUrl(emailLaunchUri)) {
+                      await launchUrl(emailLaunchUri);
+                    }
+                  },
                 ),
               ],
             ),

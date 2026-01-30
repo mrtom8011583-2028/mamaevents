@@ -20,33 +20,53 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          'Manage Events (Big Boxes)',
-          style: GoogleFonts.inter(
-            color: const Color(0xFF1F2937),
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        actions: [
+      body: Column(
+        children: [
+          // Header
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: ElevatedButton.icon(
-              onPressed: () => _showAddEditDialog(context),
-              icon: const Icon(Icons.add),
-              label: const Text('Add Event'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEC4899),
-                foregroundColor: Colors.white,
-              ),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+            child: Row(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Manage Event Categories',
+                      style: GoogleFonts.outfit(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Manage top-level event types (e.g. Weddings, Corporate)',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  onPressed: () => _showAddEditDialog(context),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('ADD CATEGORY'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD4AF37),
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-        iconTheme: const IconThemeData(color: Color(0xFF1F2937)),
-      ),
-      body: StreamBuilder<List<EventCategory>>(
+          const SizedBox(height: 16),
+          Expanded(
+            child: StreamBuilder<List<EventCategory>>(
         stream: _eventService.getEventCategoriesStream(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -84,7 +104,7 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
             padding: const EdgeInsets.all(24),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 400,
-              childAspectRatio: 1.2,
+              childAspectRatio: 1.0, // Made taller to avoid overflow
               crossAxisSpacing: 24,
               mainAxisSpacing: 24,
             ),
@@ -96,6 +116,9 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
           );
         },
       ),
+    ),
+  ],
+),
     );
   }
 
@@ -103,7 +126,6 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.go('/admin/events/${category.id}/sub-events'),
         child: Column(
@@ -111,7 +133,7 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
           children: [
             // Image Area
             Expanded(
-              flex: 3,
+              flex: 5, // Slightly larger image ratio
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -123,42 +145,42 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
                   else
                     Container(
                       color: Color(category.color.value),
-                      child: Icon(category.icon, size: 64, color: Colors.white),
+                      child: Icon(category.icon, size: 48, color: Colors.white),
                     ),
                   
                   // Status Badge
                   Positioned(
-                    top: 12,
-                    right: 12,
+                    top: 8,
+                    right: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: category.status == 'active' ? Colors.green : Colors.grey,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         category.status.toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
                   
                   // Order Badge
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: 8,
+                    left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(6),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2)),
+                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 2, offset: const Offset(0, 1)),
                         ],
                       ),
                       child: Text(
                         '#${category.order}',
-                        style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -168,19 +190,20 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
             
             // Content Area
             Expanded(
-              flex: 2,
+              flex: 4, // More room for text
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
                             category.name,
                             style: GoogleFonts.inter(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: const Color(0xFF1F2937),
                             ),
@@ -188,68 +211,80 @@ class _AdminEventsScreenState extends State<AdminEventsScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        PopupMenuButton<String>(
-                           icon: const Icon(Icons.more_vert, size: 20),
-                           onSelected: (value) async {
-                             if (value == 'edit') {
-                               _showAddEditDialog(context, category: category);
-                             } else if (value == 'toggle') {
-                               await _eventService.toggleCategoryStatus(
-                                 category.id, 
-                                 category.status != 'active'
-                               );
-                             } else if (value == 'delete') {
-                               _confirmDelete(context, category);
-                             }
-                           },
-                           itemBuilder: (context) => [
-                             const PopupMenuItem(
-                               value: 'edit',
-                               child: Row(children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Edit')]),
-                             ),
-                             PopupMenuItem(
-                               value: 'toggle',
-                               child: Row(children: [
-                                 Icon(category.status == 'active' ? Icons.visibility_off : Icons.visibility, size: 18),
-                                 const SizedBox(width: 8),
-                                 Text(category.status == 'active' ? 'Hide' : 'Show')
-                               ]),
-                             ),
-                             const PopupMenuItem(
-                               value: 'delete',
-                               child: Row(children: [Icon(Icons.delete, color: Colors.red, size: 18), SizedBox(width: 8), Text('Delete', style: TextStyle(color: Colors.red))]),
-                             ),
-                           ],
+                        Material(
+                          color: Colors.transparent,
+                          child: PopupMenuButton<String>(
+                             padding: EdgeInsets.zero,
+                             constraints: const BoxConstraints(minWidth: 120),
+                             icon: const Icon(Icons.more_vert, size: 18, color: Color(0xFF6B7280)),
+                             onSelected: (value) async {
+                               if (value == 'edit') {
+                                 _showAddEditDialog(context, category: category);
+                               } else if (value == 'toggle') {
+                                 await _eventService.toggleCategoryStatus(
+                                   category.id, 
+                                   category.status != 'active'
+                                 );
+                               } else if (value == 'delete') {
+                                 _confirmDelete(context, category);
+                               }
+                             },
+                             itemBuilder: (context) => [
+                               const PopupMenuItem(
+                                 value: 'edit',
+                                 child: Row(children: [Icon(Icons.edit, size: 16), SizedBox(width: 8), Text('Edit', style: TextStyle(fontSize: 13))]),
+                               ),
+                               PopupMenuItem(
+                                 value: 'toggle',
+                                 child: Row(children: [
+                                   Icon(category.status == 'active' ? Icons.visibility_off : Icons.visibility, size: 16),
+                                   const SizedBox(width: 8),
+                                   Text(category.status == 'active' ? 'Hide' : 'Show', style: const TextStyle(fontSize: 13))
+                                 ]),
+                               ),
+                               const PopupMenuItem(
+                                 value: 'delete',
+                                 child: Row(children: [Icon(Icons.delete, color: Colors.red, size: 16), SizedBox(width: 8), Text('Delete', style: TextStyle(color: Colors.red, fontSize: 13))]),
+                               ),
+                             ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       category.description,
                       style: GoogleFonts.inter(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: const Color(0xFF6B7280),
+                        height: 1.2,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const Spacer(),
-                    Row(
-                      children: [
-                        const Icon(Icons.layers, size: 14, color: Color(0xFF9CA3AF)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${category.subCategories.length} Sub-Events',
-                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
-                        ),
-                        const SizedBox(width: 12),
-                        const Icon(Icons.card_giftcard, size: 14, color: Color(0xFF9CA3AF)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${category.totalPackages} Packages',
-                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.only(top: 8),
+                      decoration: BoxDecoration(
+                        border: Border(top: BorderSide(color: Colors.grey[100]!)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.layers_outlined, size: 12, color: Colors.blue[400]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${category.subCategories.length} Sub-Events',
+                            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: const Color(0xFF4B5563)),
+                          ),
+                          const Spacer(),
+                          Icon(Icons.inventory_2_outlined, size: 12, color: Colors.amber[600]),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${category.totalPackages} Pkgs',
+                            style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: const Color(0xFF4B5563)),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

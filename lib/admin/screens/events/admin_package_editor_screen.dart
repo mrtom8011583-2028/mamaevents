@@ -117,49 +117,76 @@ class _AdminPackageEditorScreenState extends State<AdminPackageEditorScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          widget.packageId == 'new' ? 'New Treasure Chest' : 'Edit Treasure Chest',
-          style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        actions: [
+      body: Column(
+        children: [
+          // Header
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: ElevatedButton.icon(
-              onPressed: _savePackage,
-              icon: const Icon(Icons.save),
-              label: const Text('Save Changes'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF059669),
-                foregroundColor: Colors.white,
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 24),
+                  onPressed: () => context.pop(),
+                  tooltip: 'Cancel and Close',
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.packageId == 'new' ? 'New Treasure Chest' : 'Edit Treasure Chest',
+                      style: GoogleFonts.outfit(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Refining the perfect event package',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  onPressed: _savePackage,
+                  icon: const Icon(Icons.save_rounded, size: 18),
+                  label: const Text('SAVE PACKAGE'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD4AF37),
+                    foregroundColor: Colors.black,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  _buildSectionHeader('Basic Info', Icons.info_outline),
+                  _buildBasicInfoCard(),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Menu Content', Icons.restaurant_menu),
+                  _buildMenuEditorCard(),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Features & Tags', Icons.verified),
+                  _buildFeaturesCard(),
+                ],
               ),
             ),
           ),
         ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            _buildSectionHeader('Basic Info', Icons.info_outline),
-            _buildBasicInfoCard(),
-            
-            const SizedBox(height: 24),
-            _buildSectionHeader('Menu Content', Icons.restaurant_menu),
-            _buildMenuEditorCard(),
-
-            const SizedBox(height: 24),
-            _buildSectionHeader('Features & Tags', Icons.verified),
-            _buildFeaturesCard(),
-          ],
-        ),
       ),
     );
   }

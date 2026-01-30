@@ -8,7 +8,6 @@ import '../data/gallery_data.dart';
 import '../shared/widgets/app_bar/custom_app_bar.dart';
 import '../features/gallery/widgets/image_lightbox.dart';
 import '../config/theme/colors.dart';
-import '../features/contact/widgets/simplified_quote_dialog.dart';
 import '../shared/widgets/luxury/luxury_cta_section.dart';
 
 class GalleryScreen extends StatefulWidget {
@@ -80,7 +79,7 @@ class _GalleryScreenState extends State<GalleryScreen> with SingleTickerProvider
             _buildPremiumGalleryGrid(isMobile),
             
             // Instagram CTA
-            _buildInstagramCTA(isMobile),
+            // _buildInstagramCTA(isMobile),
             
             // CTA Section (same as About page)
             _buildCTASection(context),
@@ -367,7 +366,7 @@ class _GalleryScreenState extends State<GalleryScreen> with SingleTickerProvider
                 ),
                 const SizedBox(height: 32),
                 _AnimatedStatItem(
-                  endValue: 100,
+                  endValue: 98,
                   suffix: '%',
                   label: 'Satisfaction',
                   icon: Icons.star,
@@ -392,7 +391,7 @@ class _GalleryScreenState extends State<GalleryScreen> with SingleTickerProvider
                 ),
                 _buildStatDivider(),
                 _AnimatedStatItem(
-                  endValue: 100,
+                  endValue: 98,
                   suffix: '%',
                   label: 'Satisfaction',
                   icon: Icons.star,

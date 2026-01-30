@@ -21,6 +21,7 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
   
   String _selectedRegion = 'All';
   OrderStatus? _selectedStatus;
+  DateTimeRange? _selectedDateRange;
   
   @override
   Widget build(BuildContext context) {
@@ -574,9 +575,49 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
 
   // Dialog Methods
   void _showFilters() {
-    // TODO: Implement advanced filters
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Advanced filters coming soon')),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Orders'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+             ListTile(
+              leading: const Icon(Icons.date_range),
+              title: const Text('Date Range'),
+              subtitle: Text(_selectedDateRange == null 
+                ? 'All Time' 
+                : '${_selectedDateRange!.start.day}/${_selectedDateRange!.start.month} - ${_selectedDateRange!.end.day}/${_selectedDateRange!.end.month}'),
+              onTap: () async {
+                final picked = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                  initialDateRange: _selectedDateRange,
+                );
+                if (picked != null) {
+                  setState(() => _selectedDateRange = picked);
+                  Navigator.pop(context);
+                }
+              },
+            ),
+             const Divider(),
+             const Text('Region'),
+            ...['All', 'Pakistan'].map((region) {
+            return RadioListTile<String>(
+              title: Text(region),
+              value: region,
+              groupValue: _selectedRegion,
+              onChanged: (value) {
+                setState(() => _selectedRegion = value!);
+                Navigator.pop(context);
+              },
+            );
+          }).toList(),
+          ],
+        ),
+      ),
     );
   }
 
@@ -638,9 +679,252 @@ class _OrderManagementScreenState extends State<OrderManagementScreen> {
   }
 
   void _showOrderDetails(Order order) {
-    // TODO: Navigate to detail screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Order details for ${order.orderId}')),
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 600,
+          constraints: const BoxConstraints(maxHeight: 800),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1E3A8A),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Order Details - ${order.orderId}',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Status Section
+                      Row(
+                        children: [
+                          _buildStatusBadge(order.status),
+                          const SizedBox(width: 12),
+                          _buildPaymentBadge(order.paymentStatus, order.paymentPercentage),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Customer Info
+                      Text(
+                        'Customer Information',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildDetailRow(Icons.person, 'Name', order.customerName),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(Icons.email, 'Email', order.customerEmail),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(Icons.phone, 'Phone', order.customerPhone),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Event Info
+                      Text(
+                        'Event Details',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF9FAFB),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildDetailRow(Icons.event, 'Type', order.eventType),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(Icons.calendar_today, 'Date', '${order.eventDate.day}/${order.eventDate.month}/${order.eventDate.year}'),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(Icons.people, 'Guests', '${order.guestCount}'),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(Icons.location_on, 'Location', order.eventLocation),
+                             const SizedBox(height: 8),
+                            _buildDetailRow(Icons.map, 'Region', order.region),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Services
+                      if (order.services.isNotEmpty) ...[
+                        Text(
+                          'Included Services',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF111827),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: order.services.map((service) => Chip(
+                              label: Text(service),
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(color: Color(0xFFE5E7EB)),
+                              labelStyle: GoogleFonts.inter(fontSize: 12),
+                            )).toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // Notes
+                      if (order.notes != null && order.notes!.isNotEmpty) ...[
+                        Text(
+                          'Notes',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF111827),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFFBEB),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFFCD34D)),
+                          ),
+                          child: Text(
+                            order.notes!,
+                            style: GoogleFonts.inter(
+                              color: const Color(0xFF92400E),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Actions
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                         Navigator.pop(context);
+                         _showStatusUpdate(order);
+                      },
+                      icon: const Icon(Icons.edit, size: 18),
+                      label: const Text('Update Status'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E3A8A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: const Color(0xFF6B7280)),
+        const SizedBox(width: 12),
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: const Color(0xFF6B7280),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF111827),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

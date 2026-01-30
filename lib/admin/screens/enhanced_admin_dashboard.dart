@@ -7,11 +7,13 @@ import '../models/activity_log_model.dart';
 import '../services/order_service.dart';
 import '../services/activity_log_service.dart';
 import '../widgets/create_order_dialog.dart';
+import '../../core/models/event_package.dart';
 import '../../core/services/database_service.dart';
 import '../../core/services/seed_data_service.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 /// Enhanced Admin Dashboard - MAMA EVENTS
-/// Professional event management interface
+/// Professional event management interface - Premium Gold/White Theme
 class EnhancedAdminDashboard extends StatefulWidget {
   const EnhancedAdminDashboard({super.key});
 
@@ -25,147 +27,72 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
   
   String _selectedRegion = 'All';
   
+  // Premium Colors
+  final Color _gold = const Color(0xFFC6A869);
+  final Color _black = const Color(0xFF1F2937);
+  final Color _darkGrey = const Color(0xFF4B5563);
+  
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF212121),
-        elevation: 0,
-        title: Row(
-          children: [
-            const Icon(Icons.event, color: Color(0xFFC6A869), size: 28),
-            const SizedBox(width: 12),
-            Text(
-              'MAMA EVENTS',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFC6A869).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'ADMIN',
-                style: GoogleFonts.inter(
-                  color: const Color(0xFFC6A869),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1,
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Region Selector
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButton<String>(
-              value: _selectedRegion,
-              dropdownColor: const Color(0xFF212121),
-              underline: const SizedBox(),
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-              style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
-              items: ['All', 'Pakistan'].map((region) {
-                return DropdownMenuItem(
-                  value: region,
-                  child: Text(region),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedRegion = value);
-                }
-              },
-            ),
-          ),
-          
-          // User Menu
-          PopupMenuButton<String>(
-            icon: CircleAvatar(
-              backgroundColor: const Color(0xFFC6A869),
-              child: Text(
-                user?.email?.substring(0, 1).toUpperCase() ?? 'A',
-                style: const TextStyle(
-                  color: Color(0xFF212121),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'profile',
-                child: Row(
-                  children: [
-                    const Icon(Icons.person, size: 18),
-                    const SizedBox(width: 8),
-                    Text(user?.email ?? '',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(Icons.logout, size: 18, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Logout', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) async {
-              if (value == 'logout') {
-                await FirebaseAuth.instance.signOut();
-                if (context.mounted) {
-                  context.go('/admin/login');
-                }
-              }
-            },
-          ),
-          const SizedBox(width: 16),
-        ],
-      ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Welcome Header
-            Text(
-              'Dashboard Overview',
-              style: GoogleFonts.inter(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF1F2937),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Dashboard Overview',
+                      style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        color: _black,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Real-time event management & analytics',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: _darkGrey,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _black,
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.admin_panel_settings, color: _gold, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Admin Access',
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Real-time event management & analytics',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             
             // Metrics Cards
             StreamBuilder<List<Order>>(
@@ -194,50 +121,68 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
                     final pendingQuotes = quotes.where((q) => q['status'] == 'pending').length;
 
                     return Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
+                      spacing: 20,
+                      runSpacing: 20,
                       children: [
                         _buildMetricCard(
-                          icon: Icons.trending_up,
-                          iconColor: const Color(0xFF059669),
+                          icon: Icons.monetization_on_outlined,
                           title: 'Total Revenue',
                           value: 'PKR ${_formatNumber(totalRevenue)}',
-                          subtitle: '+12% from last month',
-                          isPositive: true,
+                          subtitle: 'Gross Revenue',
+                          isHighlight: true, // Only highlight revenue
                         ),
                         _buildMetricCard(
-                          icon: Icons.shopping_bag,
-                          iconColor: const Color(0xFF3B82F6),
+                          icon: Icons.shopping_bag_outlined,
                           title: 'Total Orders',
                           value: totalOrders.toString(),
-                          subtitle: '$activeOrders active orders',
-                          isPositive: true,
+                          subtitle: '$activeOrders active',
+                          isHighlight: false,
                         ),
                         _buildMetricCard(
-                          icon: Icons.format_quote,
-                          iconColor: const Color(0xFF6366F1),
-                          title: 'Total Quotes',
+                          icon: Icons.request_quote_outlined,
+                          title: 'Quotes Requests',
                           value: totalQuotes.toString(),
-                          subtitle: '$pendingQuotes pending requests',
-                          isPositive: true,
+                          subtitle: '$pendingQuotes pending',
+                          isHighlight: false,
                         ),
                         _buildMetricCard(
-                          icon: Icons.pending_actions,
-                          iconColor: const Color(0xFFF59E0B),
+                          icon: Icons.pending_actions_outlined,
                           title: 'Pending Payment',
                           value: 'PKR ${_formatNumber(pendingPayments)}',
-                          subtitle: 'Outstanding balance',
-                          isPositive: false,
+                          subtitle: 'Outstanding',
+                          isHighlight: false,
                         ),
                         _buildMetricCard(
-                          icon: Icons.event_available,
-                          iconColor: const Color(0xFF8B5CF6),
+                          icon: Icons.event_outlined,
                           title: 'Upcoming Events',
                           value: orders.where((o) => 
                             o.eventDate.isAfter(DateTime.now())
                           ).length.toString(),
                           subtitle: 'Next 30 days',
-                          isPositive: true,
+                          isHighlight: false,
+                        ),
+                        StreamBuilder<List<EventCategory>>(
+                          stream: FirebaseDatabase.instance.ref('events').onValue.map((event) {
+                             if (event.snapshot.value == null) return [];
+                             final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+                             return data.values.map((e) => EventCategory.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+                          }),
+                          builder: (context, eventSnapshot) {
+                            final categories = eventSnapshot.data ?? [];
+                            int totalPkgs = 0;
+                            for (var c in categories) {
+                              for (var s in c.subCategories) {
+                                totalPkgs += s.packages.length;
+                              }
+                            }
+                            return _buildMetricCard(
+                               icon: Icons.inventory_2_outlined,
+                               title: 'Package Library',
+                               value: '$totalPkgs',
+                               subtitle: '${categories.length} Categories',
+                               isHighlight: false,
+                            );
+                          }
                         ),
                       ],
                     );
@@ -246,134 +191,130 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
               },
             ),
             
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             
             // Quick Actions
-            Row(
-              children: [
-                Text(
-                  'Quick Actions',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1F2937),
-                  ),
-                ),
-              ],
+            Text(
+              'Quick Actions',
+              style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _black,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 16,
+              runSpacing: 16,
               children: [
                 _buildQuickAction(
-                  icon: Icons.add_circle,
+                  icon: Icons.add_circle_outline,
                   label: 'New Order',
-                  color: const Color(0xFF059669),
                   onTap: _showCreateOrderDialog,
+                  isPrimary: true,
                 ),
                 _buildQuickAction(
-                  icon: Icons.format_quote,
+                  icon: Icons.format_list_bulleted,
                   label: 'View Quotes',
-                  color: const Color(0xFF3B82F6),
                   onTap: () => context.go('/admin/quotes'),
                 ),
                 _buildQuickAction(
-                  icon: Icons.shopping_bag,
+                  icon: Icons.shopping_bag_outlined,
                   label: 'Manage Orders',
-                  color: const Color(0xFF8B5CF6),
                   onTap: () => context.go('/admin/orders'),
                 ),
                  _buildQuickAction(
-                  icon: Icons.category,
+                  icon: Icons.category_outlined,
                   label: 'Manage Events',
-                  color: const Color(0xFFEC4899), // Pink
                   onTap: () => context.go('/admin/events'),
                 ),
                 _buildQuickAction(
                   icon: Icons.history,
                   label: 'Activity Log',
-                  color: const Color(0xFF6B7280),
                   onTap: () => context.go('/admin/activity'),
                 ),
-                _buildQuickAction(
-                  icon: Icons.cloud_upload,
-                  label: 'Seed Events',
-                  color: const Color(0xFF6366F1),
-                  onTap: _seedData,
-                ),
               ],
             ),
             
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
             
-            // Recent Activity
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Recent Activity',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1F2937),
+            // Recent Activity Section
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.grey[200]!),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 15,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                TextButton.icon(
-                  onPressed: () => context.go('/admin/activity'),
-                  icon: const Icon(Icons.arrow_forward, size: 16),
-                  label: const Text('View All'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            StreamBuilder<List<ActivityLog>>(
-              stream: _activityLogService.getRecentActivities(limit: 5),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return _buildErrorCard(snapshot.error.toString());
-                }
-                
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                final activities = snapshot.data!;
-                
-                if (activities.isEmpty) {
-                  return _buildEmptyState(
-                    icon: Icons.history,
-                    message: 'No recent activity',
-                  );
-                }
-                
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                ],
+              ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Recent Activity',
+                          style: GoogleFonts.outfit(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: _black,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.go('/admin/activity'),
+                          style: TextButton.styleFrom(foregroundColor: _gold),
+                          child: const Text('View All'),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: activities.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final activity = activities[index];
-                      return _buildActivityItem(activity);
+                  const Divider(height: 1),
+                  StreamBuilder<List<ActivityLog>>(
+                    stream: _activityLogService.getRecentActivities(limit: 5),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) return _buildErrorCard(snapshot.error.toString());
+                      if (!snapshot.hasData) return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()));
+                      
+                      final activities = snapshot.data!;
+                      if (activities.isEmpty) {
+                         return Padding(
+                           padding: const EdgeInsets.all(40),
+                           child: Text('No recent activity', style: GoogleFonts.inter(color: Colors.grey)),
+                         );
+                      }
+                      
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: activities.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1, indent: 24, endIndent: 24),
+                        itemBuilder: (context, index) {
+                          return _buildActivityItem(activities[index]);
+                        },
+                      );
                     },
                   ),
-                );
-              },
+                ],
+              ),
             ),
+             
+             // Advanced Options (Seed Data) - Hidden/Small
+             const SizedBox(height: 40),
+             Center(
+               child: TextButton.icon(
+                 onPressed: _seedData,
+                 icon: Icon(Icons.build_circle_outlined, size: 14, color: Colors.grey[400]),
+                 label: Text('Developer Options: Seed Database', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey[400])),
+               ),
+             ),
           ],
         ),
       ),
@@ -382,78 +323,62 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
 
   Widget _buildMetricCard({
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String value,
     required String subtitle,
-    required bool isPositive,
+    required bool isHighlight,
   }) {
     return Container(
       width: 280,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: isHighlight ? _black : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: isHighlight ? null : Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: isHighlight ? _black.withOpacity(0.3) : Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: iconColor, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: const Color(0xFF6B7280),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isHighlight ? Colors.white.withOpacity(0.1) : _gold.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: isHighlight ? _gold : _gold, size: 24),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             value,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.outfit(
               fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1F2937),
+              fontWeight: FontWeight.bold,
+              color: isHighlight ? Colors.white : _black,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: isHighlight ? Colors.grey[400] : _darkGrey,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                isPositive ? Icons.trending_up : Icons.info_outline,
-                size: 14,
-                color: isPositive ? const Color(0xFF059669) : const Color(0xFF6B7280),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                subtitle,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: const Color(0xFF6B7280),
-                ),
-              ),
-            ],
+           Text(
+            subtitle,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: isHighlight ? Colors.grey[500] : Colors.grey[400],
+            ),
           ),
         ],
       ),
@@ -463,31 +388,35 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
   Widget _buildQuickAction({
     required IconData icon,
     required String label,
-    required Color color,
     required VoidCallback onTap,
+    bool isPrimary = false,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        width: 160,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.2)),
+          color: isPrimary ? _gold : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: isPrimary ? null : Border.all(color: Colors.grey[200]!),
+          boxShadow: isPrimary 
+            ? [BoxShadow(color: _gold.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4))]
+            : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Column(
           children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(width: 8),
+            Icon(icon, color: isPrimary ? Colors.white : _black, size: 28),
+            const SizedBox(height: 12),
             Text(
               label,
               style: GoogleFonts.inter(
-                color: color,
+                color: isPrimary ? Colors.white : _black,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -497,18 +426,18 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
 
   Widget _buildActivityItem(ActivityLog activity) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: _getActionColor(activity.action).withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          color: _gold.withOpacity(0.1),
+          shape: BoxShape.circle,
         ),
         child: Center(
           child: Text(
             activity.action.icon,
-            style: const TextStyle(fontSize: 20),
+            style: const TextStyle(fontSize: 18),
           ),
         ),
       ),
@@ -517,100 +446,24 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
         style: GoogleFonts.inter(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: const Color(0xFF1F2937),
+          color: _black,
         ),
       ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 4),
-          Text(
-            activity.entityName,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: const Color(0xFF6B7280),
-            ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          '${activity.entityName} • ${_formatTime(activity.timestamp)}',
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: Colors.grey[500],
           ),
-          Text(
-            '${activity.performedByName} • ${_formatTime(activity.timestamp)}',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: const Color(0xFF9CA3AF),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String message,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(48),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(icon, size: 48, color: const Color(0xFF9CA3AF)),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-          ],
         ),
       ),
     );
   }
 
   Widget _buildErrorCard(String error) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEE2E2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline, color: Color(0xFFDC2626)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              error,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: const Color(0xFFDC2626),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getActionColor(ActivityAction action) {
-    switch (action) {
-      case ActivityAction.orderCreated:
-      case ActivityAction.quoteAccepted:
-        return const Color(0xFF059669);
-      case ActivityAction.paymentReceived:
-        return const Color(0xFF3B82F6);
-      case ActivityAction.statusChanged:
-        return const Color(0xFFF59E0B);
-      case ActivityAction.orderCancelled:
-      case ActivityAction.quoteRejected:
-        return const Color(0xFFDC2626);
-      default:
-        return const Color(0xFF6B7280);
-    }
+    return Center(child: Text('Error: $error', style: const TextStyle(color: Colors.red)));
   }
 
   String _formatNumber(double number) {
@@ -638,12 +491,12 @@ class _EnhancedAdminDashboardState extends State<EnhancedAdminDashboard> {
     );
     
     if (result == true && mounted) {
-      // Order created successfully, refresh if needed
       setState(() {});
     }
   }
 
   Future<void> _seedData() async {
+    // ... same as before
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

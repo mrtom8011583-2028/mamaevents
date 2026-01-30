@@ -15,6 +15,7 @@ class LuxuryPackagesSection extends StatelessWidget {
       tagline: 'Refined Simplicity',
       description: 'Single-course selections with express delivery.',
       idealFor: 'Office Lunches',
+      imageUrl: 'https://images.unsplash.com/photo-1577308856961-0e97146ba5e8?q=80&w=800&auto=format&fit=crop', // Catering Setup
       features: [
         'Single-course menu selection',
         'Express delivery service',
@@ -29,6 +30,7 @@ class LuxuryPackagesSection extends StatelessWidget {
       tagline: 'Most Popular',
       description: '2-course buffet with premium crockery and full setup.',
       idealFor: 'Birthdays',
+      imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?q=80&w=800&auto=format&fit=crop', // Buffet
       features: [
         '2-course buffet spread',
         'Premium crockery & cutlery',
@@ -43,6 +45,7 @@ class LuxuryPackagesSection extends StatelessWidget {
       tagline: 'Premium Experience',
       description: '3-course menu with live cooking stations and uniformed staff.',
       idealFor: 'Corporate Events & Engagements',
+      imageUrl: 'https://images.unsplash.com/photo-1519225421980-715cb0202128?q=80&w=800&auto=format&fit=crop', // Corporate/Formal
       features: [
         '3-course gourmet menu',
         'Live cooking stations',
@@ -57,6 +60,7 @@ class LuxuryPackagesSection extends StatelessWidget {
       tagline: 'Wedding Excellence',
       description: 'Multi-cuisine gala with luxury decor and unlimited appetizers.',
       idealFor: 'Weddings',
+      imageUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=800&auto=format&fit=crop', // Wedding
       features: [
         'Multi-cuisine gala spread',
         'Luxury event decor',
@@ -71,6 +75,7 @@ class LuxuryPackagesSection extends StatelessWidget {
       tagline: 'Ultimate Luxury',
       description: 'VIP sit-down service with exotic ingredients and dedicated event concierge.',
       idealFor: 'VIP Events',
+      imageUrl: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=800&auto=format&fit=crop', // luxury dining
       features: [
         'VIP sit-down service',
         'Exotic premium ingredients',
@@ -244,29 +249,45 @@ class _PackageCardState extends State<PackageCard> {
             // Package Header with Image Placeholder
             Stack(
               children: [
-                // TODO: Insert Asset Image Path Here
-                Container(
+                // Image Section
+                SizedBox(
                   height: 200,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
+                  width: double.infinity,
+                  child: ClipRRect(
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
                     ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color(0xFFE0E0E0),
-                        const Color(0xFFF5F5F5),
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.restaurant_menu,
-                      size: 60,
-                      color: Colors.grey[400],
+                    child: Image.network(
+                      widget.package.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: const Color(0xFFF5F5F5),
+                          child: Center(
+                            child: Icon(
+                              Icons.restaurant_menu,
+                              size: 40,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: const Color(0xFFF5F5F5),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded / 
+                                    loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: const Color(0xFFC6A869),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -470,6 +491,7 @@ class PackageData {
   final String tagline;
   final String description;
   final String idealFor;
+  final String imageUrl;
   final List<String> features;
   final bool popular;
   final bool bespoke;
@@ -480,6 +502,7 @@ class PackageData {
     required this.tagline,
     required this.description,
     required this.idealFor,
+    required this.imageUrl,
     required this.features,
     this.popular = false,
     this.bespoke = false,

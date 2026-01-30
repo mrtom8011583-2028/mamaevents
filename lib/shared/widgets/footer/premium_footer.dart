@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/app_config_provider.dart';
+import '../../../services/newsletter_service.dart';
 import '../../../config/theme/colors.dart';
 
 class PremiumFooter extends StatelessWidget {
@@ -58,7 +59,7 @@ class PremiumFooter extends StatelessWidget {
           const SizedBox(height: 50),
           
           // Social Media
-          _buildSocialMedia(),
+          // _buildSocialMedia(),
           
           const SizedBox(height: 40),
           
@@ -112,80 +113,126 @@ class PremiumFooter extends StatelessWidget {
         const SizedBox(height: 24),
         
         // Newsletter Signup
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: const Color(0xFF424242).withOpacity(0.3),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Stay Updated',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+        StatefulBuilder(
+          builder: (context, setState) {
+            bool isLoading = false;
+            final emailController = TextEditingController();
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF424242).withOpacity(0.3),
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(
-                'Subscribe for exclusive offers & event tips',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.6),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: TextField(
-                      style: GoogleFonts.inter(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'Your email',
-                        hintStyle: GoogleFonts.inter(
-                          color: Colors.white.withOpacity(0.4),
-                          fontSize: 13,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.1),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
+                  Text(
+                    'Stay Updated',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      // TODO: Implement newsletter signup
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF212121),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Subscribe for exclusive offers & event tips',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.6),
                     ),
-                    child: const Icon(Icons.arrow_forward, size: 18),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: emailController,
+                          style: GoogleFonts.inter(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Your email',
+                            hintStyle: GoogleFonts.inter(
+                              color: Colors.white.withOpacity(0.4),
+                              fontSize: 13,
+                            ),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.1),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Use a Builder to get a context that can show SnackBars if needed (though top-level context usually works)
+                      Builder(
+                        builder: (innerContext) {
+                          return ElevatedButton(
+                            onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (emailController.text.trim().isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Please enter an email address'), backgroundColor: Colors.red),
+                                    );
+                                    return;
+                                  }
+
+                                  setState(() => isLoading = true);
+                                  try {
+                                    await NewsletterService().subscribeToNewsletter(
+                                      emailController.text.trim(),
+                                      config.region.code,
+                                    );
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Subscribed successfully!'), backgroundColor: Colors.green),
+                                      );
+                                      emailController.clear();
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red),
+                                      );
+                                    }
+                                  } finally {
+                                    if (context.mounted) {
+                                      setState(() => isLoading = false);
+                                    }
+                                  }
+                                },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF212121),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            child: isLoading
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : const Icon(Icons.arrow_forward, size: 18),
+                          );
+                        }
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            );
+          }
         ),
       ],
     );

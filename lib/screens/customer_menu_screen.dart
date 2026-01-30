@@ -14,7 +14,6 @@ import '../shared/widgets/animations/entry_animation.dart';
 
 import '../providers/menu_provider.dart';
 import '../providers/app_config_provider.dart';
-import '../features/contact/widgets/simplified_quote_dialog.dart';
 import '../shared/widgets/luxury/luxury_cta_section.dart';
 
 class CustomerMenuScreen extends StatefulWidget {
@@ -266,9 +265,9 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> with TickerProv
                                  child: GridView.builder(
                                    shrinkWrap: true,
                                    physics: const NeverScrollableScrollPhysics(),
-                                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                     crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
-                                     childAspectRatio: isMobile ? 0.7 : 0.65,
+                                   gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                                     maxCrossAxisExtent: 320,
+                                     childAspectRatio: 0.7,
                                      mainAxisSpacing: 24,
                                      crossAxisSpacing: 24,
                                    ),
@@ -282,6 +281,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> with TickerProv
                                          title: item.name,
                                          description: _cleanDescription(item.description),
                                          price: menuProvider.getFormattedPrice(item),
+                                         isLarge: true,
                                          onTap: () {},
                                        ),
                                      );
@@ -336,9 +336,9 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> with TickerProv
      }
      
      return SliverGrid(
-       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-         crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
-         childAspectRatio: isMobile ? 0.7 : 0.65,
+       gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+         maxCrossAxisExtent: 320,
+         childAspectRatio: 0.7,
          mainAxisSpacing: 24,
          crossAxisSpacing: 24,
        ),
@@ -350,6 +350,7 @@ class _CustomerMenuScreenState extends State<CustomerMenuScreen> with TickerProv
                title: item.name,
                description: _cleanDescription(item.description),
                price: provider.getFormattedPrice(item),
+               isLarge: true,
                onTap: () {},
              );
          },

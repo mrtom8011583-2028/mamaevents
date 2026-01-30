@@ -61,6 +61,24 @@ class ActivityLog {
         return 'Added customer';
       case ActivityAction.customerUpdated:
         return 'Updated customer';
+      case ActivityAction.categoryCreated:
+        return 'Created event category';
+      case ActivityAction.categoryUpdated:
+        return 'Updated event category';
+      case ActivityAction.categoryDeleted:
+        return 'Deleted event category';
+      case ActivityAction.subCategoryCreated:
+        return 'Created sub-category';
+      case ActivityAction.subCategoryUpdated:
+        return 'Updated sub-category';
+      case ActivityAction.subCategoryDeleted:
+        return 'Deleted sub-category';
+      case ActivityAction.packageCreated:
+        return 'Created package';
+      case ActivityAction.packageUpdated:
+        return 'Updated package';
+      case ActivityAction.packageDeleted:
+        return 'Deleted package';
       case ActivityAction.noteAdded:
         return 'Added note';
       case ActivityAction.fileUploaded:
@@ -209,6 +227,17 @@ enum ActivityAction {
   fileUploaded('file_uploaded', 'Uploaded File', '📎'),
   emailSent('email_sent', 'Sent Email', '📧'),
   smsSent('sms_sent', 'Sent SMS', '💬'),
+  
+  // Event Management actions
+  categoryCreated('category_created', 'Created Category', '📁'),
+  categoryUpdated('category_updated', 'Updated Category', '✏️'),
+  categoryDeleted('category_deleted', 'Deleted Category', '🗑️'),
+  subCategoryCreated('subcategory_created', 'Created Sub-Category', '📂'),
+  subCategoryUpdated('subcategory_updated', 'Updated Sub-Category', '✏️'),
+  subCategoryDeleted('subcategory_deleted', 'Deleted Sub-Category', '🗑️'),
+  packageCreated('package_created', 'Created Package', '📦'),
+  packageUpdated('package_updated', 'Updated Package', '✏️'),
+  packageDeleted('package_deleted', 'Deleted Package', '🗑️'),
   
   // System actions
   login('login', 'Logged In', '🔓'),

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' as math;
 import '../../../config/theme/colors.dart';
 import '../../../providers/app_config_provider.dart';
+import '../../../widgets/advanced_quote_request_form.dart';
 
 /// Premium Contact Section
 /// Features: 2x2 Quick Contact Grid + Contact Form with Gold Accents
@@ -291,7 +292,10 @@ class _PremiumContactSectionState extends State<PremiumContactSection>
               subtitle: 'Free Consultation',
               isGold: true,
               onTap: () {
-                // Scroll to form or navigate
+                showDialog(
+                  context: context,
+                  builder: (context) => const AdvancedQuoteRequestForm(),
+                );
               },
             ),
           ],

@@ -1,10 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/quote_request.dart';
 import '../../config/constants/api_constants.dart';
+import '../../admin/services/activity_log_service.dart';
+import '../../admin/models/activity_log_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Service for handling quote/inquiry submissions
 class QuoteService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ActivityLogService _activityLog = ActivityLogService();
 
   /// Submit a new quote request
   Future<bool> submitQuote(QuoteRequest quote) async {
@@ -13,7 +17,17 @@ class QuoteService {
           .collection(ApiConstants.quotesCollection)
           .add(quote.toJson());
       
-      // TODO: Trigger email notification via Cloud Function
+      // Log as system action since it's guest initiated
+      await _activityLog.log(ActivityLog.create(
+        action: ActivityAction.quoteCreated,
+        performedBy: 'guest',
+        performedByName: 'Guest Customer',
+        entityType: 'quote',
+        entityId: quote.id,
+        entityName: '${quote.name} - ${quote.serviceType}',
+        note: 'New quote submitted from website',
+      ));
+
       return true;
     } catch (e) {
       print('Error submitting quote: $e');
@@ -77,10 +91,30 @@ class QuoteService {
   /// Update quote status
   Future<bool> updateQuoteStatus(String quoteId, String newStatus) async {
     try {
+      final doc = await _firestore
+          .collection(ApiConstants.quotesCollection)
+          .doc(quoteId)
+          .get();
+      
+      final before = doc.data();
+
       await _firestore
           .collection(ApiConstants.quotesCollection)
           .doc(quoteId)
           .update({'status': newStatus});
+
+      final user = FirebaseAuth.instance.currentUser;
+      await _activityLog.log(ActivityLog.create(
+        action: ActivityAction.statusChanged,
+        performedBy: user?.uid ?? 'system',
+        performedByName: user?.email ?? 'System',
+        entityType: 'quote',
+        entityId: quoteId,
+        entityName: before?['customerName'] ?? quoteId,
+        changesBefore: {'status': before?['status']},
+        changesAfter: {'status': newStatus},
+      ));
+
       return true;
     } catch (e) {
       print('Error updating quote status: $e');

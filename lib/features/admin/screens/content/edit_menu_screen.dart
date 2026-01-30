@@ -10,6 +10,7 @@ import '../../../../core/models/live_station_add_on.dart';
 import '../../../../core/services/database_service.dart';
 import '../../../../utils/database_seeder.dart';
 import '../../../../shared/widgets/base64_image.dart';
+import 'package:mama_events/features/admin/widgets/image_picker_widget.dart';
 
 class EditMenuScreen extends StatefulWidget {
   const EditMenuScreen({super.key});
@@ -33,45 +34,6 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
     }
   }
 
-  Future<String?> _pickAndConvertImage() async {
-    final picker = ImagePicker();
-    // CRITICAL: Aggressive compression to avoid Firebase RTDB 10MB limit
-    // Max 400x400 pixels, 30% quality = typically under 50KB
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery, 
-      imageQuality: 30,  // Very low quality for small file size
-      maxWidth: 400,     // Resize to max 400px width
-      maxHeight: 400,    // Resize to max 400px height
-    );
-    
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      final base64String = base64Encode(bytes);
-      
-      // Check size - Firebase RTDB has 10MB limit, but keep it under 500KB for performance
-      final sizeKB = base64String.length / 1024;
-      debugPrint('📸 Image size: ${sizeKB.toStringAsFixed(1)} KB');
-      
-      if (sizeKB > 500) {
-        // Show warning but still allow if under 5MB
-        if (sizeKB > 5000) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Image too large! Please use a smaller image.'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-          return null;
-        }
-        debugPrint('⚠️ Large image warning: ${sizeKB.toStringAsFixed(1)} KB');
-      }
-      
-      return base64String;
-    }
-    return null;
-  }
 
   void _showItemDialog({MenuItem? item}) {
     final nameController = TextEditingController(text: item?.name ?? '');
@@ -116,26 +78,10 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                 TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description'), maxLines: 2),
                 const SizedBox(height: 16),
                 
-                // Image Picker
-                InkWell(
-                  onTap: () async {
-                    final img = await _pickAndConvertImage();
-                    if (img != null) setState(() => base64Image = img);
-                  },
-                  child: Container(
-                    height: 100,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: base64Image != null && base64Image!.isNotEmpty
-                        ? Base64Image(base64String: base64Image!, borderRadius: BorderRadius.circular(8))
-                        : const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [Icon(Icons.add_a_photo), Text('Tap to add Image')],
-                          ),
-                  ),
+                AdminImagePicker(
+                  initialUrl: base64Image,
+                  storagePath: 'menu_items',
+                  onImageUploaded: (val) => setState(() => base64Image = val),
                 ),
               ],
             ),
@@ -253,7 +199,7 @@ class _EditMenuScreenState extends State<EditMenuScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF212121),
+                    color: Colors.black,
                   ),
                 ),
                 const Spacer(),

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/models/event_package.dart';
 import '../providers/events_provider.dart';
 import '../shared/widgets/app_bar/custom_app_bar.dart';
-import '../features/contact/widgets/simplified_quote_dialog.dart';
+import '../widgets/advanced_quote_request_form.dart';
 import '../shared/widgets/luxury/luxury_hero_header.dart';
 import '../shared/widgets/luxury/luxury_tab_bar.dart';
 import '../shared/widgets/luxury/gold_divider.dart';
@@ -170,45 +170,161 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
 
 extension _MethodExtensions on EventDetailsScreen {
   Widget _buildPackageList(EventSubCategory subCategory) {
-    if (subCategory.packages.isEmpty) {
-        return Center(child: Text('No packages available.', style: GoogleFonts.inter(color: Colors.grey)));
-    }
-
     return AnimatedListWrapper(
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-        itemCount: subCategory.packages.length + 2,
+        // Add 1 for the header (description/image). 
+        // If packages exist, add them + 2 (CTA + spacer).
+        // If empty, add 1 (message).
+        itemCount: subCategory.packages.isEmpty 
+            ? 2 // Header + "No packages"
+            : subCategory.packages.length + 3, // Header + Packages + CTA + Spacer
         itemBuilder: (context, index) {
-          if (index == subCategory.packages.length) {
+          // 0. SUB-CATEGORY HEADER (Description & Image)
+          if (index == 0) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Sub-Category Image (Optional: Only if different from main hero or specific desire)
+                // For now, let's focus on the Description as requested.
+                
+                // Description
+                if (subCategory.description.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 40),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1A1A),
+                      border: Border(left: BorderSide(color: const Color(0xFFD4AF37), width: 3)),
+                      borderRadius: const BorderRadius.only(topRight: Radius.circular(12), bottomRight: Radius.circular(12)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subCategory.name.toUpperCase(),
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFFD4AF37),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          subCategory.description,
+                          style: GoogleFonts.playfairDisplay(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 18,
+                            height: 1.6,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          }
+
+          // Handle Empty State
+          if (subCategory.packages.isEmpty) {
+             // Index 1 is the message
+             return Center(
+               child: Padding(
+                 padding: const EdgeInsets.only(top: 40),
+                 child: Text(
+                   'No packages available for this category yet.',
+                   style: GoogleFonts.inter(color: Colors.grey[600], fontStyle: FontStyle.italic),
+                 ),
+               ),
+             );
+          }
+
+          // Handle Packages
+          // Indices: 0=Header, 1..N = Packages
+          final packageIndex = index - 1;
+
+          if (packageIndex < subCategory.packages.length) {
+            final package = subCategory.packages[packageIndex];
+            return EntryAnimation(
+              index: packageIndex,
+              child: _buildPremiumPackageCard(context, package),
+            );
+          }
+
+          // CTA Section
+          if (packageIndex == subCategory.packages.length) {
               return const LuxuryCTASection(
                 buttonTypes: [CTAButtonType.gallery, CTAButtonType.quote],
               );
           }
-          if (index == subCategory.packages.length + 1) {
-              return const SizedBox(height: 80);
-          }
-          final package = subCategory.packages[index];
-          return EntryAnimation(
-            index: index,
-            child: _buildPremiumPackageCard(context, package),
-          );
+
+          // Spacer
+          return const SizedBox(height: 80);
         },
       ),
     );
   }
 
   Widget _buildPremiumPackageCard(BuildContext context, PackageTier package) {
-     final features = package.description.split('\n').where((s) => s.trim().isNotEmpty).toList();
      final isMobile = MediaQuery.of(context).size.width < 600;
+     
+     // 1. Resolve Image
+     String? bgImage;
+     if (package.images.isNotEmpty) {
+       bgImage = package.images.first;
+     } else if (package.imageUrl.isNotEmpty) {
+       bgImage = package.imageUrl;
+     }
+
+     // 2. Resolve Price
+     final price = package.pricing.pricePerPerson;
+     final priceText = price > 0 
+         ? 'Rs ${price.round().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}'
+         : 'Get Quote';
+
+     // 3. Resolve Features (Highlights)
+     final displayFeatures = <String>[];
+     
+     // Add structured features
+     if (package.features.boneFree) displayFeatures.add('Bone-Free (No Bones)');
+     if (package.features.messFree) displayFeatures.add('Mess-Free (Easy to Eat)');
+     if (package.features.grilled) displayFeatures.add('Live BBQ (Grilled Fresh)');
+     if (package.features.lowOil) displayFeatures.add('Low Oil / Heart Healthy');
+     if (package.features.ketoFriendly) displayFeatures.add('Keto Friendly');
+     
+     // Add explicit tags
+     if (package.tags.isNotEmpty) {
+       displayFeatures.addAll(package.tags);
+     }
+     
+     // Fallback to description loop if no structured features found
+     if (displayFeatures.isEmpty) {
+        final descLines = package.description.split('\n').where((s) => s.trim().isNotEmpty).toList();
+        if (descLines.every((l) => l.length < 60)) {
+           displayFeatures.addAll(descLines);
+        }
+     }
 
      return Container(
        margin: const EdgeInsets.only(bottom: 40),
        decoration: BoxDecoration(
-         gradient: const LinearGradient(
-           begin: Alignment.topLeft,
-           end: Alignment.bottomRight,
-           colors: [Color(0xFF222222), Color(0xFF111111)],
-         ),
+         color: const Color(0xFF111111), // Fallback color
+         image: bgImage != null && bgImage.isNotEmpty
+             ? DecorationImage(
+                 image: NetworkImage(bgImage),
+                 fit: BoxFit.cover,
+                 colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.85), BlendMode.darken),
+               )
+             : null,
+         gradient: bgImage == null 
+             ? const LinearGradient(
+                 begin: Alignment.topLeft,
+                 end: Alignment.bottomRight,
+                 colors: [Color(0xFF222222), Color(0xFF111111)],
+               )
+             : null,
          borderRadius: BorderRadius.circular(16),
          boxShadow: [
            BoxShadow(
@@ -255,7 +371,7 @@ extension _MethodExtensions on EventDetailsScreen {
                        ),
                        const SizedBox(height: 4),
                        Text(
-                         'EXCLUSIVELY CRAFTED',
+                         package.tagline.isNotEmpty ? package.tagline : 'EXCLUSIVELY CRAFTED',
                          style: GoogleFonts.inter(
                            color: const Color(0xFFD4AF37).withOpacity(0.7),
                            fontSize: 10,
@@ -274,7 +390,7 @@ extension _MethodExtensions on EventDetailsScreen {
                      border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.3)),
                    ),
                    child: Text(
-                     '${package.pricing.pricePerPerson} PKR',
+                     priceText,
                      style: GoogleFonts.inter(
                        color: const Color(0xFFD4AF37),
                        fontSize: isMobile ? 16 : 20,
@@ -292,8 +408,8 @@ extension _MethodExtensions on EventDetailsScreen {
              child: Column(
                crossAxisAlignment: CrossAxisAlignment.start,
                children: [
-                  // 1. General Description / Highlights
-                  if (features.isNotEmpty && features.first.length > 5) ...[
+                  // 1. Highlights (Structured Features)
+                  if (displayFeatures.isNotEmpty) ...[
                      Text(
                        'PACKAGE HIGHLIGHTS',
                        style: GoogleFonts.inter(
@@ -304,7 +420,7 @@ extension _MethodExtensions on EventDetailsScreen {
                        ),
                      ),
                      const SizedBox(height: 16),
-                     ...features.map((feature) => _buildFeatureItem(feature)).toList(),
+                     ...displayFeatures.map((feature) => _buildFeatureItem(feature)).toList(),
                      const SizedBox(height: 32),
                      const Divider(color: Colors.white10),
                      const SizedBox(height: 32),
@@ -320,7 +436,7 @@ extension _MethodExtensions on EventDetailsScreen {
                   _buildSectionGroup('Bakery & Breads', package.menuSections.breads),
 
                   // If everything is empty, show a placeholder
-                  if (package.menuSections.allItems.isEmpty && features.isEmpty)
+                  if (package.menuSections.allItems.isEmpty && displayFeatures.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Text(
@@ -344,11 +460,36 @@ extension _MethodExtensions on EventDetailsScreen {
                      ],
                    ),
                    child: ElevatedButton(
-// ... (rest of the CTA button and helper remains same)
                      onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (context) => const SimplifiedQuoteDialog(),
+                          builder: (context) => Dialog(
+                            backgroundColor: Colors.white,
+                            insetPadding: EdgeInsets.symmetric(
+                              horizontal: MediaQuery.of(context).size.width < 600 ? 16 : 40,
+                              vertical: 24
+                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 900, maxHeight: 800),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: AdvancedQuoteRequestForm(
+                                  packageName: package.name,
+                                  basePricePerHead: package.pricing.pricePerPerson.toDouble(),
+                                  onSuccess: () {
+                                     Navigator.pop(context);
+                                     ScaffoldMessenger.of(context).showSnackBar(
+                                       const SnackBar(
+                                         content: Text('Reservation request submitted successfully!'),
+                                         backgroundColor: Color(0xFF059669),
+                                       ),
+                                     );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
                         );
                      },
                      style: ElevatedButton.styleFrom(
@@ -448,5 +589,3 @@ extension _MethodExtensions on EventDetailsScreen {
     );
   }
 }
-
-  // Remove duplicate methods if any
