@@ -387,14 +387,14 @@ The app automatically detects user location and suggests the appropriate region 
 
 For development support or questions:
 - **Email**: developer@freshcatering.com
-- **WhatsApp (PK)**: +92 305 1340042
-- **WhatsApp (UAE)**: +971 52 218 6060
+- **WhatsApp (PK)**: +92 343710189
+
 
 ---
 
 ## 📄 License
 
-Proprietary - All rights reserved © 2026 Fresh Catering
+Proprietary - All rights reserved © 2026 Moaz Aamir
 
 ---
 
