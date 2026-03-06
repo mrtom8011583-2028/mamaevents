@@ -386,7 +386,7 @@ The app automatically detects user location and suggests the appropriate region 
 ## 📞 Contact
 
 For development support or questions:
-- **Email**: developer@freshcatering.com
+- **Email**: mrtom8011583@gmail.com
 - **WhatsApp (PK)**: +92 343710189
 
 
