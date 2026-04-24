@@ -55,25 +55,61 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 // Hide contact info on small mobile screens
                 if (MediaQuery.of(context).size.width > 600) ...[
-                  const Icon(Icons.phone, color: Colors.white, size: 14),
-                  const SizedBox(width: 6),
-                  Text(
-                    config.phoneNumber,
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                  InkWell(
+                    onTap: () async {
+                      final uri = Uri(
+                        scheme: 'tel',
+                        path: config.phoneNumber.replaceAll(' ', ''),
+                      );
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.platformDefault);
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.phone, color: Colors.white, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          config.phoneNumber,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white54,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 20),
-                  const Icon(Icons.email, color: Colors.white, size: 14),
-                  const SizedBox(width: 6),
-                  Text(
-                    config.email,
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                  InkWell(
+                    onTap: () async {
+                      final uri = Uri(
+                        scheme: 'mailto',
+                        path: config.email,
+                      );
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.platformDefault);
+                      }
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.email, color: Colors.white, size: 14),
+                        const SizedBox(width: 6),
+                        Text(
+                          config.email,
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white54,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

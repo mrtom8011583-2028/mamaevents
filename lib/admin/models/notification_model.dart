@@ -22,21 +22,28 @@ class AdminNotification {
     this.metadata,
   });
 
-  factory AdminNotification.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory AdminNotification.fromMap(Map<String, dynamic> data) {
     return AdminNotification(
-      id: doc.id,
+      id: data['id'] ?? '',
       title: data['title'] ?? '',
       message: data['message'] ?? '',
       type: NotificationType.values.firstWhere(
         (e) => e.name == data['type'],
         orElse: () => NotificationType.info,
       ),
-      timestamp: (data['timestamp'] as Timestamp).toDate(),
+      timestamp: data['timestamp'] != null 
+          ? DateTime.fromMillisecondsSinceEpoch(data['timestamp'] as int)
+          : DateTime.now(),
       isRead: data['isRead'] ?? false,
       actionUrl: data['actionUrl'],
-      metadata: data['metadata'],
+      metadata: data['metadata'] != null ? Map<String, dynamic>.from(data['metadata']) : null,
     );
+  }
+
+  factory AdminNotification.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    data['id'] = doc.id; // Ensure ID is passed
+    return AdminNotification.fromMap(data);
   }
 
   Map<String, dynamic> toMap() {

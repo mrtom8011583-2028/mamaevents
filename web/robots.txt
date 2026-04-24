@@ -1,5 +1,5 @@
 # robots.txt for MAMA EVENTS
-# https://mamaevents.com/robots.txt
+# https://mamaevents.pk/robots.txt
 
 User-agent: *
 Allow: /
@@ -7,7 +7,7 @@ Disallow: /admin
 Disallow: /admin/*
 
 # Sitemaps
-Sitemap: https://mamaevents.com/sitemap.xml
+Sitemap: https://mamaevents.pk/sitemap.xml
 
 # Crawl-delay
 Crawl-delay: 10

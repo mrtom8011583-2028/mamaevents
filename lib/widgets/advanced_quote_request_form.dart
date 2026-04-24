@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../providers/app_config_provider.dart';
 import '../core/services/database_service.dart';
 import '../config/theme/colors.dart';
+import '../services/verification_code_service.dart';
+import '../services/email_notification_service.dart';
 
 /// Advanced Multi-Step Quote Request Form
 /// REFACTORED: Single View, Responsive (2-Column Desktop), Compact
@@ -322,7 +325,7 @@ class _AdvancedQuoteRequestFormState extends State<AdvancedQuoteRequestForm> {
       _buildTextField(
         controller: _emailController,
         label: 'Email Address',
-        hint: 'john@example.com',
+        hint: 'your.email@example.com',
         keyboardType: TextInputType.emailAddress,
         required: true,
         validator: (v) => (v != null && !v.contains('@')) ? 'Invalid email' : null,
@@ -654,20 +657,70 @@ class _AdvancedQuoteRequestFormState extends State<AdvancedQuoteRequestForm> {
         'createdAt': ServerValue.timestamp,
       });
 
-      // --- WhatsApp Integration ---
+      // Pre-format times to avoid using context across async gap
+      final startTimeStr = _startTime!.format(context);
+      final endTimeStr = _endTime!.format(context);
+
+      // 📧 Send quote details to info@mamaevents.pk (non-blocking, never fails submission)
+      EmailNotificationService.sendQuoteNotification(
+        quoteId: quoteId,
+        customerName: _nameController.text,
+        customerEmail: _emailController.text,
+        customerPhone: _phoneController.text,
+        serviceType: _selectedServiceType ?? 'Not specified',
+        packageName: widget.packageName,
+        guestCount: guests,
+        eventDate: DateFormat('dd MMM yyyy').format(_serviceDate!),
+        eventTime: '$startTimeStr – $endTimeStr',
+        location: _locationController.text,
+        frequency: _serviceFrequency ?? 'Not specified',
+        budgetRange: _budgetRange,
+        serviceStyles: _selectedServiceStyles.join(', '),
+        notes: _additionalDetailsController.text,
+        estimatedTotal: estimatedTotal,
+      ).catchError((e) {
+        // Never block quote submission for email errors
+        if (kDebugMode) print('Email notification failed (non-fatal): $e');
+      });
+
+      // 🔐 Generate verification code (isolated – never blocks WhatsApp)
+      String verificationCode = 'N/A';
+      try {
+        final verificationService = VerificationCodeService();
+        verificationCode = await verificationService.createAndDistributeCode(
+          quoteId: quoteId,
+          customerName: _nameController.text,
+          customerEmail: _emailController.text,
+          customerPhone: _phoneController.text,
+          serviceType: _selectedServiceType ?? 'Unknown',
+        );
+      } catch (e) {
+        if (kDebugMode) print('Verification code failed (non-fatal): $e');
+        // Continue — WhatsApp and Admin Panel still work
+      }
+
+      // 📱 WhatsApp — always fires
       final whatsappUrl = config.region.getWhatsAppLink(
         message: '''
 *New Quote Request* 📋
-Name: ${_nameController.text}
-Phone: ${_phoneController.text}
-Event: $_selectedServiceType
-Guests: $guests
-Date: ${DateFormat('dd MMM yyyy').format(_serviceDate!)}
-Time: ${_startTime!.format(context)} - ${_endTime!.format(context)}
-Location: ${_locationController.text}
-Budget: $_budgetRange
-Package: ${widget.packageName ?? 'Custom'}
-Notes: ${_additionalDetailsController.text}
+*Quote ID:* $quoteId
+─────────────────
+*Name:* ${_nameController.text}
+*Phone:* ${_phoneController.text}
+*Email:* ${_emailController.text}
+─────────────────
+*Event:* $_selectedServiceType
+*Package:* ${widget.packageName ?? 'Custom'}
+*Guests:* $guests
+*Date:* ${DateFormat('dd MMM yyyy').format(_serviceDate!)}
+*Time:* $startTimeStr - $endTimeStr
+*Location:* ${_locationController.text}
+*Frequency:* $_serviceFrequency
+*Budget:* $_budgetRange
+*Styles:* ${_selectedServiceStyles.join(', ')}
+*Notes:* ${_additionalDetailsController.text}
+─────────────────
+*Verification Code:* $verificationCode
 '''
       );
 
@@ -675,7 +728,6 @@ Notes: ${_additionalDetailsController.text}
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
-      // ----------------------------
 
       if (widget.onSuccess != null) widget.onSuccess!();
     } catch (e) {

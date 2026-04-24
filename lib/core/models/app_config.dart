@@ -17,7 +17,7 @@ class AppConfig {
     this.region = Region.pakistan,
     this.companyName = 'MAMA EVENTS',
     this.companyTagline = 'Premium Catering Services',
-    this.email = 'info@freshcatering.com',
+    this.email = 'info@mamaevents.pk',
     this.address = 'Karachi, Pakistan',
     Map<String, String>? socialMedia,
     this.maintenanceMode = false,
@@ -33,7 +33,7 @@ class AppConfig {
       region: Region.pakistan,
       companyName: data['company_name'] as String? ?? 'MAMA EVENTS',
       companyTagline: data['tagline'] as String? ?? 'Premium Catering Services',
-      email: data['email'] as String? ?? 'info@freshcatering.com',
+      email: data['email'] as String? ?? 'info@mamaevents.pk',
       address: data['address'] as String? ?? 'Karachi, Pakistan',
     );
   }
@@ -119,7 +119,7 @@ class AppConfig {
       region: Region.pakistan,
       companyName: json['companyName'] as String? ?? 'MAMA EVENTS',
       companyTagline: json['companyTagline'] as String? ?? 'Premium Catering Services',
-      email: json['email'] as String? ?? 'info@freshcatering.com',
+      email: json['email'] as String? ?? 'info@mamaevents.pk',
       address: json['address'] as String? ?? 'Karachi, Pakistan',
       socialMedia: (json['socialMedia'] as Map<String, dynamic>?)?.cast<String, String>() ?? {},
       maintenanceMode: json['maintenanceMode'] as bool? ?? false,

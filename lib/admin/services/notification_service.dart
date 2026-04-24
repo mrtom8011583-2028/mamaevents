@@ -1,14 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import '../models/notification_model.dart';
+import 'package:flutter/foundation.dart';
 
 /// Notification Service
-/// Handles admin notifications system
+/// Handles admin notifications system (Refactored to Realtime Database)
 class NotificationService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseDatabase _db = FirebaseDatabase.instance;
   
-  CollectionReference get _notificationsCollection =>
-      _firestore.collection('admin_notifications');
+  DatabaseReference get _notificationsRef =>
+      _db.ref('admin_notifications');
 
   /// Create a new notification
   Future<void> createNotification({
@@ -18,65 +18,81 @@ class NotificationService {
     String? actionUrl,
     Map<String, dynamic>? metadata,
   }) async {
-    await _notificationsCollection.add({
-      'title': title,
-      'message': message,
-      'type': type.name,
-      'timestamp': FieldValue.serverTimestamp(),
-      'isRead': false,
-      'actionUrl': actionUrl,
-      'metadata': metadata,
-    });
+    try {
+      final newRef = _notificationsRef.push();
+      await newRef.set({
+        'title': title,
+        'message': message,
+        'type': type.name,
+        'timestamp': ServerValue.timestamp,
+        'isRead': false,
+        'actionUrl': actionUrl,
+        'metadata': metadata,
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error creating notification: $e');
+      }
+    }
   }
 
   /// Get all notifications stream
   Stream<List<AdminNotification>> getNotifications({int? limit}) {
-    Query query = _notificationsCollection
-        .orderBy('timestamp', descending: true);
+    Query query = _notificationsRef.orderByChild('timestamp');
     
     if (limit != null) {
-      query = query.limit(limit);
+      query = query.limitToLast(limit);
     }
     
-    return query.snapshots().map((snapshot) {
-      return snapshot.docs
-          .map((doc) => AdminNotification.fromFirestore(doc))
-          .toList();
+    return query.onValue.map((event) {
+      if (event.snapshot.value == null) return [];
+      
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      final List<AdminNotification> notifications = [];
+      
+      data.forEach((key, value) {
+        final map = Map<String, dynamic>.from(value as Map);
+        map['id'] = key;
+        notifications.add(AdminNotification.fromMap(map));
+      });
+      
+      // Sort descending (newest first)
+      notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      
+      return notifications;
     });
   }
 
   /// Get unread notifications count
   Stream<int> getUnreadCount() {
-    return _notificationsCollection
-        .where('isRead', isEqualTo: false)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+    return _notificationsRef.orderByChild('isRead').equalTo(false).onValue.map((event) {
+      if (event.snapshot.value == null) return 0;
+      return event.snapshot.children.length; // Count children
+    });
   }
 
   /// Mark notification as read
   Future<void> markAsRead(String notificationId) async {
-    await _notificationsCollection.doc(notificationId).update({
+    await _notificationsRef.child(notificationId).update({
       'isRead': true,
     });
   }
 
   /// Mark all as read
   Future<void> markAllAsRead() async {
-    final batch = _firestore.batch();
-    final unreadDocs = await _notificationsCollection
-        .where('isRead', isEqualTo: false)
-        .get();
-    
-    for (var doc in unreadDocs.docs) {
-      batch.update(doc.reference, {'isRead': true});
+    final snapshot = await _notificationsRef.orderByChild('isRead').equalTo(false).get();
+    if (snapshot.exists) {
+      final Map<String, dynamic> updates = {};
+      for (var child in snapshot.children) {
+        updates['/${child.key}/isRead'] = true;
+      }
+      await _notificationsRef.update(updates);
     }
-    
-    await batch.commit();
   }
 
   /// Delete notification
   Future<void> deleteNotification(String notificationId) async {
-    await _notificationsCollection.doc(notificationId).delete();
+    await _notificationsRef.child(notificationId).remove();
   }
 
   /// Auto-create notifications for new quotes

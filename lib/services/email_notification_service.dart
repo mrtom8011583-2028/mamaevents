@@ -1,22 +1,82 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
-/// Service for sending email notifications
-/// This uses a simple HTTP API approach
-/// For production, you should use Firebase Cloud Functions or a dedicated email service
+/// Service for sending email notifications via EmailJS
+/// Uses info@mamaevents.pk Gmail service (service_hdctx38)
 class EmailNotificationService {
-  // Email configuration
-  // TODO: Replace with your actual email service credentials
-  static const String _emailApiUrl = 'YOUR_EMAIL_API_ENDPOINT';
-  static const String _apiKey = 'YOUR_API_KEY';
+  // ─────────────────────────────────────────────────────────────
+  // EmailJS Configuration  ← UPDATE template_id after you create
+  //                          the template on emailjs.com
+  // ─────────────────────────────────────────────────────────────
+  static const String _serviceId  = 'service_hdctx38';    // info@mamaevents.pk service
+  static const String _quoteTemplateId = 'template_t1bbuug';  // Quote notification template
+  static const String _verifyTemplateId = 'template_mzjxaux';     // existing verify template
+  static const String _publicKey  = 'gIOKi2IQ4SuGcy5Se';  // your public key
 
-  // Admin email addresses (where notifications will be sent)
-  static const Map<String, String> _adminEmails = {
-    'pk': 'admin.pakistan@freshcatering.com',  // Pakistan admin email
-  };
+  static const String _emailJsApiUrl = 'https://api.emailjs.com/api/v1.0/email/send';
 
-  /// Send email notification when contact form is submitted
+  // Admin email – receives every quote
+  static const String _adminEmail = 'info@mamaevents.pk';
+
+  // ─────────────────────────────────────────────────────────────
+  // 1. QUOTE NOTIFICATION  ← new method
+  // ─────────────────────────────────────────────────────────────
+  /// Called when a quote form is submitted.
+  /// Sends full quote details to info@mamaevents.pk
+  static Future<void> sendQuoteNotification({
+    required String quoteId,
+    required String customerName,
+    required String customerEmail,
+    required String customerPhone,
+    required String serviceType,
+    String? packageName,
+    required int guestCount,
+    required String eventDate,
+    required String eventTime,
+    required String location,
+    required String frequency,
+    String? budgetRange,
+    String serviceStyles = '',
+    String notes = '',
+    double estimatedTotal = 0,
+  }) async {
+    try {
+      await _sendViaEmailJS(
+        templateId: _quoteTemplateId,
+        templateParams: {
+          'to_name':        'Admin',
+          'to_email':       _adminEmail,
+          'quote_id':       quoteId,
+          'from_name':      customerName,
+          'from_email':     customerEmail,
+          'phone':          customerPhone,
+          'service_type':   serviceType,
+          'package_name':   packageName ?? 'Custom',
+          'guest_count':    guestCount.toString(),
+          'event_date':     eventDate,
+          'event_time':     eventTime,
+          'location':       location,
+          'frequency':      frequency,
+          'budget':         budgetRange ?? 'Not specified',
+          'service_styles': serviceStyles,
+          'notes':          notes.isEmpty ? 'None' : notes,
+          'estimated_total': estimatedTotal > 0
+              ? estimatedTotal.toStringAsFixed(0)
+              : 'TBD',
+          'type': 'New Quote Request',
+        },
+      );
+      if (kDebugMode) print('✅ Quote email sent to $_adminEmail');
+    } catch (e) {
+      // Non-fatal – never block quote submission
+      if (kDebugMode) print('❌ Error sending quote notification email: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // 2. CONTACT FORM NOTIFICATION
+  // ─────────────────────────────────────────────────────────────
   static Future<void> sendContactFormNotification({
     required String name,
     required String email,
@@ -25,178 +85,75 @@ class EmailNotificationService {
     required String region,
   }) async {
     try {
-      final adminEmail = _adminEmails['pk'];
-
-      // Email subject
-      final subject = '🔔 New Contact Form Submission - ${region.toUpperCase()}';
-
-      // Email body (HTML format)
-      final htmlBody = '''
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #212121; color: white; padding: 20px; text-align: center; }
-    .content { background-color: #f5f5f5; padding: 20px; margin-top: 20px; }
-    .field { margin-bottom: 15px; }
-    .label { font-weight: bold; color: #212121; }
-    .value { margin-top: 5px; padding: 10px; background-color: white; border-left: 3px solid #212121; }
-    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>MAMA EVENTS</h1>
-      <p>New Contact Form Submission</p>
-    </div>
-    
-    <div class="content">
-      <div class="field">
-        <div class="label">📍 Region:</div>
-        <div class="value">$region</div>
-      </div>
-      
-      <div class="field">
-        <div class="label">👤 Name:</div>
-        <div class="value">$name</div>
-      </div>
-      
-      <div class="field">
-        <div class="label">📧 Email:</div>
-        <div class="value">$email</div>
-      </div>
-      
-      <div class="field">
-        <div class="label">📞 Phone:</div>
-        <div class="value">$phone</div>
-      </div>
-      
-      <div class="field">
-        <div class="label">💬 Message:</div>
-        <div class="value">$message</div>
-      </div>
-    </div>
-    
-    <div class="footer">
-      <p>This is an automated notification from MAMA EVENTS contact form.</p>
-      <p>Please log in to the admin dashboard to manage this submission.</p>
-    </div>
-  </div>
-</body>
-</html>
-''';
-
-      // Plain text version
-      final textBody = '''
-New Contact Form Submission - MAMA EVENTS
-
-Region: $region
-Name: $name
-Email: $email
-Phone: $phone
-Message: $message
-
----
-This is an automated notification.
-Please log in to the admin dashboard to manage this submission.
-''';
-
-      // Send email using your preferred method
-      // Option 1: Using a simple HTTP API (e.g., SendGrid, Mailgun, etc.)
-      await _sendViaHttpApi(
-        to: adminEmail!,
-        subject: subject,
-        htmlBody: htmlBody,
-        textBody: textBody,
+      await _sendViaEmailJS(
+        templateId: _quoteTemplateId,
+        templateParams: {
+          'to_name':    'Admin',
+          'to_email':   _adminEmail,
+          'from_name':  name,
+          'from_email': email,
+          'phone':      phone,
+          'message':    message,
+          'region':     region,
+          'type':       'Contact Form',
+          'reply_to':   email,
+        },
       );
-
-      print('✅ Email notification sent successfully to $adminEmail');
     } catch (e) {
-      print('❌ Error sending email notification: $e');
-      // Don't throw error - we don't want to fail the form submission if email fails
+      if (kDebugMode) print('❌ Error sending contact notification: $e');
     }
   }
 
-  /// Send email via HTTP API
-  /// This is a template - replace with your actual email service
-  static Future<void> _sendViaHttpApi({
-    required String to,
-    required String subject,
-    required String htmlBody,
-    required String textBody,
+  // ─────────────────────────────────────────────────────────────
+  // 3. VERIFICATION CODE EMAIL
+  // ─────────────────────────────────────────────────────────────
+  static Future<void> sendVerificationEmail({
+    required String name,
+    required String email,
+    required String code,
+    required String quoteId,
   }) async {
-    // Example using a generic email API
-    // Replace this with your actual email service (SendGrid, Mailgun, etc.)
+    try {
+      await _sendViaEmailJS(
+        templateId: _verifyTemplateId,
+        templateParams: {
+          'to_name':  name,
+          'to_email': email,
+          'code':     code,
+          'quote_id': quoteId,
+          'message':  'Your verification code is: $code',
+          'type':     'Verification',
+        },
+      );
+      if (kDebugMode) print('✅ Verification email sent to $email');
+    } catch (e) {
+      if (kDebugMode) print('❌ Error sending verification email: $e');
+    }
+  }
 
-    /* EXAMPLE FOR SENDGRID:
+  // ─────────────────────────────────────────────────────────────
+  // CORE SENDER
+  // ─────────────────────────────────────────────────────────────
+  static Future<void> _sendViaEmailJS({
+    required String templateId,
+    required Map<String, dynamic> templateParams,
+  }) async {
     final response = await http.post(
-      Uri.parse('https://api.sendgrid.com/v3/mail/send'),
+      Uri.parse(_emailJsApiUrl),
       headers: {
-        'Authorization': 'Bearer $_apiKey',
         'Content-Type': 'application/json',
+        'origin': 'https://mamaevents.pk',
       },
       body: jsonEncode({
-        'personalizations': [
-          {
-            'to': [{'email': to}],
-            'subject': subject,
-          }
-        ],
-        'from': {'email': 'noreply@mamaevents.com', 'name': 'MAMA EVENTS'},
-        'content': [
-          {'type': 'text/plain', 'value': textBody},
-          {'type': 'text/html', 'value': htmlBody},
-        ],
+        'service_id':      _serviceId,
+        'template_id':     templateId,
+        'user_id':         _publicKey,
+        'template_params': templateParams,
       }),
     );
 
-    if (response.statusCode != 202) {
-      throw Exception('Failed to send email: ${response.body}');
-    }
-    */
-
-    // For now, just log (you'll implement actual sending later)
-    print('📧 Email would be sent to: $to');
-    print('Subject: $subject');
-  }
-
-  /// Alternative: Send email using Firebase Cloud Functions
-  /// This is the recommended approach for production
-  static Future<void> sendViaCloudFunction({
-    required String name,
-    required String email,
-    required String phone,
-    required String message,
-    required String region,
-  }) async {
-    try {
-      // Call Firebase Cloud Function
-      // You'll need to create a Cloud Function that sends emails
-
-      /* EXAMPLE:
-      final response = await http.post(
-        Uri.parse('https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/sendContactEmail'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'name': name,
-          'email': email,
-          'phone': phone,
-          'message': message,
-          'region': region,
-        }),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Cloud function failed: ${response.body}');
-      }
-      */
-
-      print('📧 Cloud function would be called for: $email');
-    } catch (e) {
-      print('❌ Error calling cloud function: $e');
+    if (response.statusCode != 200) {
+      throw Exception('EmailJS Error ${response.statusCode}: ${response.body}');
     }
   }
 }

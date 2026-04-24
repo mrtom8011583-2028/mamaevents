@@ -366,7 +366,7 @@ class _CreateOrderDialogState extends State<CreateOrderDialog> {
         quoteId: _selectedQuoteId!,
         customerId: _selectedQuote!['email'] ?? 'unknown',
         customerName: _selectedQuote!['name'] ?? 'Unknown',
-        customerEmail: _selectedQuote!['email'] ?? 'unknown@example.com',
+        customerEmail: _selectedQuote!['email'] ?? 'info@mamaevents.pk',
         customerPhone: _selectedQuote!['phone'] ?? 'N/A',
         eventType: _selectedQuote!['serviceType'] ?? _selectedQuote!['eventType'] ?? 'Event',
         eventLocation: _selectedQuote!['eventLocation'] ?? _selectedQuote!['location'] ?? 'TBD',

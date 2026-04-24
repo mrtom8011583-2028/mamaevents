@@ -67,7 +67,7 @@ class FirebaseTestUtil {
         'quoteId': 'TEST-${DateTime.now().millisecondsSinceEpoch}',
         'name': 'Test Customer',
         'phone': '+92 300 0000000',
-        'email': 'test@example.com',
+        'email': 'info@mamaevents.pk',
         'guestCount': 100,
         'eventDate': Timestamp.fromDate(DateTime.now().add(const Duration(days: 7))),
         'region': 'PK',

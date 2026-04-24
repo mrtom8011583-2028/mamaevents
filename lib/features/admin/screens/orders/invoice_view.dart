@@ -277,7 +277,7 @@ class _InvoicePrintViewState extends State<InvoicePrintView> {
                    children: [
                      pw.Text('Thank you for choosing Mama Events!', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                      pw.Text('Please make checks payable to "Mama Events"', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
-                     pw.Text('For questions, contact us at info@mamaevents.com', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                     pw.Text('For questions, contact us at info@mamaevents.pk', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
                    ],
                  ),
                ),
@@ -688,7 +688,7 @@ class _InvoicePrintViewState extends State<InvoicePrintView> {
                       const SizedBox(height: 8),
                       Text('Please make checks payable to "Mama Events"', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
                       const SizedBox(height: 4),
-                      Text('For questions, contact us at info@mamaevents.com', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
+                      Text('For questions, contact us at info@mamaevents.pk', style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
                     ],
                   ),
                 ),

@@ -206,7 +206,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
                             _buildTextField(
                               controller: _emailController,
                               label: 'Email Address',
-                              hint: 'admin@mamaevents.com',
+                              hint: 'admin@mamaevents.pk',
                               icon: Icons.alternate_email_rounded,
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
